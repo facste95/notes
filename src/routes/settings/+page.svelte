@@ -7,6 +7,37 @@
   import { editorMode } from '$lib/stores/editor.js';
   import { locale } from '$lib/i18n.js';
   import { noteToMarkdown, noteToText, noteToHtml, notesToJson, parseJsonBackup, downloadFile } from '$lib/export.js';
+  import { getApiKey, setApiKey, clearApiKey } from '$lib/ai.js';
+
+  let apiKey = '';
+  let rememberKey = false;
+  let apiKeyMasked = false;
+
+  onMount(() => {
+    const stored = getApiKey();
+    if (stored) {
+      apiKey = stored;
+      apiKeyMasked = true;
+    }
+    rememberKey = !!localStorage.getItem('foliaApiKey');
+  });
+
+  function saveApiKey() {
+    if (!apiKey.trim()) return;
+    setApiKey(apiKey.trim(), rememberKey);
+    apiKeyMasked = true;
+  }
+
+  function editApiKey() {
+    apiKeyMasked = false;
+  }
+
+  function removeApiKey() {
+    clearApiKey();
+    apiKey = '';
+    apiKeyMasked = false;
+    rememberKey = false;
+  }
 
   async function exportCurrentNote(format) {
     const lastPref = await db.prefs.get('lastOpenedNoteId');
@@ -108,6 +139,32 @@
       <input type="file" accept=".json" on:change={importJson} hidden />
     </label>
   </section>
+
+  <section>
+    <h2>{$_('settings.aiTitle')}</h2>
+
+    {#if apiKeyMasked}
+      <div class="api-key-row">
+        <code class="api-key-masked">sk-ant-••••••••••••</code>
+        <button on:click={editApiKey}>{$_('common.edit')}</button>
+        <button class="danger-btn" on:click={removeApiKey}>{$_('common.delete')}</button>
+      </div>
+    {:else}
+      <input
+        type="password"
+        bind:value={apiKey}
+        placeholder={$_('settings.apiKeyPlaceholder')}
+        class="api-input"
+      />
+      <label class="remember-label">
+        <input type="checkbox" bind:checked={rememberKey} />
+        {$_('settings.rememberKey')}
+      </label>
+      <button on:click={saveApiKey}>{$_('common.save')}</button>
+    {/if}
+
+    <p class="api-disclaimer">{$_('settings.apiKeyNote')}</p>
+  </section>
 </div>
 
 <style>
@@ -164,4 +221,49 @@
     color: var(--color-text);
   }
   .import-label:hover { background: var(--color-hover); }
+  .api-key-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .api-key-masked {
+    font-family: monospace;
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+  }
+  .api-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.875rem;
+    background: var(--color-surface);
+    color: var(--color-text);
+    margin-bottom: 0.5rem;
+    outline: none;
+  }
+  .remember-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+  }
+  .api-disclaimer {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-top: 0.75rem;
+    line-height: 1.5;
+  }
+  .danger-btn {
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
+  }
+  .danger-btn:hover {
+    color: var(--color-text);
+    border-color: var(--color-text-muted);
+  }
 </style>
