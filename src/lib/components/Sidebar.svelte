@@ -10,10 +10,16 @@
   import { fly, fade } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   import { quintOut } from 'svelte/easing';
+  import SearchBar from './SearchBar.svelte';
+  import TagBadge from './TagBadge.svelte';
+  import { searchNotes } from '$lib/search.js';
 
   let selectedFolderId = null;
   let newFolderName = '';
   let showNewFolder = false;
+  let searchQuery = '';
+  let searchResults = [];
+  let selectedTag = null;
 
   const notes = liveQuery(() =>
     selectedFolderId === null
@@ -23,6 +29,11 @@
 
   const folders = liveQuery(() => db.folders.orderBy('name').toArray());
   const allCount = liveQuery(() => db.notes.count());
+  const allTags = liveQuery(async () => {
+    const notes = await db.notes.toArray();
+    const tags = new Set(notes.flatMap(n => n.tags ?? []));
+    return [...tags].sort();
+  });
 
   async function createNote() {
     const id = await db.notes.add({
@@ -55,6 +66,21 @@
     return (notesList ?? []).filter(n => n.folderId === folderId).length;
   }
 
+  function onSearch({ detail }) {
+    searchQuery = detail.query;
+    if (!searchQuery.trim()) {
+      searchResults = [];
+      return;
+    }
+    searchResults = searchNotes(searchQuery);
+  }
+
+  $: displayedNotes = searchQuery.trim()
+    ? ($notes ?? []).filter(n => searchResults.some(r => r.id === n.id))
+    : selectedTag
+      ? ($notes ?? []).filter(n => (n.tags ?? []).includes(selectedTag))
+      : ($notes ?? []);
+
   $: currentNoteId = $page.params.id ? Number($page.params.id) : null;
 </script>
 
@@ -69,6 +95,7 @@
   </div>
 
   {#if $sidebarOpen}
+    <SearchBar on:search={onSearch} placeholder="Cerca..." />
     <div class="sidebar-content">
       <div
         class="all-notes-row"
@@ -115,7 +142,20 @@
 
       <div class="section-divider"></div>
 
-      {#each $notes ?? [] as note (note.id)}
+      {#if ($allTags ?? []).length > 0}
+        <div class="tag-section">
+          {#each $allTags ?? [] as tag}
+            <TagBadge
+              {tag}
+              active={selectedTag === tag}
+              on:click={() => selectedTag = selectedTag === tag ? null : tag}
+            />
+          {/each}
+        </div>
+        <div class="section-divider"></div>
+      {/if}
+
+      {#each displayedNotes as note (note.id)}
         <div
           in:fly={{ y: 15, duration: 250, easing: quintOut }}
           out:fade={{ duration: 150 }}
@@ -193,4 +233,10 @@
   }
   .add-folder-btn:hover { color: var(--color-text); }
   .icon { display: inline-flex; align-items: center; }
+  .tag-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 0.5rem 0.75rem;
+  }
 </style>
