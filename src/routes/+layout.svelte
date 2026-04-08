@@ -40,7 +40,36 @@
 
 <style>
   :global(*) { box-sizing: border-box; margin: 0; padding: 0; }
-  :global(body) { font-family: 'Literata', Georgia, serif; }
+
+  :global([data-theme='light']) {
+    --color-bg: #faf9f7;
+    --color-surface: #f3f2ee;
+    --color-border: #e5e4df;
+    --color-text: #1a1917;
+    --color-text-muted: #6b6a66;
+    --color-text-faint: #aaa9a5;
+    --color-accent: #333;
+    --color-hover: #eeecea;
+  }
+
+  :global([data-theme='dark']) {
+    --color-bg: #1a1917;
+    --color-surface: #232220;
+    --color-border: #2e2d2a;
+    --color-text: #e8e7e3;
+    --color-text-muted: #9b9a96;
+    --color-text-faint: #555450;
+    --color-accent: #e8e7e3;
+    --color-hover: #2a2927;
+  }
+
+  :global(body) {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Literata', Georgia, serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
 
   .app {
     display: flex;
@@ -50,5 +79,6 @@
   .main-content {
     flex: 1;
     overflow-y: auto;
+    background: var(--color-bg);
   }
 </style>

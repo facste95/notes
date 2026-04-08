@@ -22,10 +22,10 @@
   .note-card {
     padding: 0.75rem 1rem;
     cursor: pointer;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border);
   }
-  .note-card:hover, .note-card.active { background: #f5f5f0; }
+  .note-card:hover, .note-card.active { background: var(--color-hover); }
   .note-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; }
-  .note-meta { font-size: 0.75rem; color: #999; margin-bottom: 0.25rem; }
-  .note-excerpt { font-size: 0.8rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .note-meta { font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 0.25rem; }
+  .note-excerpt { font-size: 0.8rem; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>

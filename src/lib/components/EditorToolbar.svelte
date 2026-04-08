@@ -34,14 +34,15 @@
 <style>
   .toolbar {
     display: flex; align-items: center; gap: 0.25rem;
-    padding: 0.5rem 1rem; border-bottom: 1px solid #e5e5e0;
-    background: #faf9f7; flex-wrap: wrap;
+    padding: 0.5rem 1rem; border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg); flex-wrap: wrap;
   }
   button {
     background: none; border: 1px solid transparent; padding: 0.25rem 0.5rem;
     cursor: pointer; font-size: 0.8rem; border-radius: 3px; font-family: inherit;
+    color: var(--color-text);
   }
-  button:hover { background: #eeede8; border-color: #ddd; }
-  .separator { width: 1px; height: 1.2rem; background: #ddd; margin: 0 0.25rem; }
-  .mode-toggle { margin-left: auto; font-size: 0.75rem; color: #666; }
+  button:hover { background: var(--color-hover); border-color: var(--color-border); }
+  .separator { width: 1px; height: 1.2rem; background: var(--color-border); margin: 0 0.25rem; }
+  .mode-toggle { margin-left: auto; font-size: 0.75rem; color: var(--color-text-muted); }
 </style>

@@ -129,7 +129,7 @@
   }
   .markdown-split { display: flex; gap: 1rem; height: calc(100vh - 200px); }
   .md-source {
-    flex: 1; border: 1px solid #e5e5e0; padding: 1rem;
+    flex: 1; border: 1px solid var(--color-border); padding: 1rem;
     font-family: monospace; font-size: 0.9rem;
     resize: none; outline: none; border-radius: 4px;
     line-height: 1.6; background: transparent; color: inherit;
@@ -137,6 +137,6 @@
   .md-preview { flex: 1; padding: 1rem; overflow-y: auto; }
   .md-preview-text {
     font-family: monospace; font-size: 0.9rem;
-    white-space: pre-wrap; line-height: 1.6; color: #666;
+    white-space: pre-wrap; line-height: 1.6; color: var(--color-text-muted);
   }
 </style>
