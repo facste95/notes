@@ -1,10 +1,9 @@
 <script>
   import { onMount } from 'svelte';
-  import { sidebarOpen, toggleSidebar, theme } from '$lib/stores/ui.js';
+  import { sidebarOpen, toggleSidebar, theme, language } from '$lib/stores/ui.js';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import { db } from '$lib/db.js';
   import { setupI18n, locale } from '$lib/i18n.js';
-  import { language } from '$lib/stores/ui.js';
   import { buildIndex } from '$lib/search.js';
 
   function handleKeydown(e) {
