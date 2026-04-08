@@ -1,1 +1,0 @@
-import{w as t}from"./Bgxk5YNh.js";var a;typeof navigator<"u"&&(a=navigator.language)!=null&&a.startsWith("it");const n=t("light"),i=t(!0),o=t(!1),r=()=>i.update(e=>!e);export{n as a,o as i,i as s,r as t};
