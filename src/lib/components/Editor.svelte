@@ -6,6 +6,7 @@
   import { editorMode, setEditorMode } from '$lib/stores/editor.js';
   import { isWriting } from '$lib/stores/ui.js';
   import EditorToolbar from './EditorToolbar.svelte';
+  import AIPanel from './AIPanel.svelte';
 
   export let note;
 
@@ -15,6 +16,7 @@
   let markdownContent = note.content;
   let writingTimer;
   let saveTimer;
+  let showAIPanel = false;
 
   const DEBOUNCE_MS = 800;
 
@@ -83,8 +85,28 @@
   }
 </script>
 
+<svelte:window on:keydown={e => { if (e.key === 'Escape' && showAIPanel) showAIPanel = false; }} />
+
 <div class="editor-wrapper">
-  <EditorToolbar editor={tiptap} mode={$editorMode} on:toggleMode={toggleMode} />
+  <div class="toolbar-wrapper">
+    <EditorToolbar
+      editor={tiptap}
+      mode={$editorMode}
+      {showAIPanel}
+      on:toggleMode={toggleMode}
+      on:toggleAI={() => (showAIPanel = !showAIPanel)}
+    />
+    {#if showAIPanel}
+      <AIPanel
+        editor={tiptap}
+        noteId={note.id}
+        on:close={() => (showAIPanel = false)}
+        on:setTags={async ({ detail }) => {
+          await db.notes.update(note.id, { tags: detail.tags, updatedAt: Date.now() });
+        }}
+      />
+    {/if}
+  </div>
 
   <div class="editor-body">
     <input
@@ -114,6 +136,7 @@
 
 <style>
   .editor-wrapper { display: flex; flex-direction: column; height: 100%; }
+  .toolbar-wrapper { position: relative; flex-shrink: 0; }
   .editor-body {
     flex: 1; overflow-y: auto; padding: 2rem;
     max-width: 720px; margin: 0 auto; width: 100%;

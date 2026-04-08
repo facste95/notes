@@ -1,7 +1,9 @@
 <script>
   import { createEventDispatcher } from 'svelte';
+  import { Sparkles } from 'lucide-svelte';
   export let editor = null;
   export let mode = 'rich';
+  export let showAIPanel = false;
 
   const dispatch = createEventDispatcher();
 
@@ -29,6 +31,14 @@
   >
     {mode === 'rich' ? 'MD' : 'Rich'}
   </button>
+  <button
+    class="ai-btn"
+    class:active={showAIPanel}
+    on:click={() => dispatch('toggleAI')}
+    title="AI"
+  >
+    <Sparkles size={14} />
+  </button>
 </div>
 
 <style>
@@ -45,4 +55,6 @@
   button:hover { background: var(--color-hover); border-color: var(--color-border); }
   .separator { width: 1px; height: 1.2rem; background: var(--color-border); margin: 0 0.25rem; }
   .mode-toggle { margin-left: auto; font-size: 0.75rem; color: var(--color-text-muted); }
+  .ai-btn { display: flex; align-items: center; }
+  .ai-btn.active { background: var(--color-hover); border-color: var(--color-border); }
 </style>
