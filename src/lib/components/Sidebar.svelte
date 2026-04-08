@@ -7,6 +7,9 @@
   import NoteCard from './NoteCard.svelte';
   import FolderItem from './FolderItem.svelte';
   import { Folder, X, Plus, ChevronLeft, ChevronRight } from 'lucide-svelte';
+  import { fly, fade } from 'svelte/transition';
+  import { flip } from 'svelte/animate';
+  import { quintOut } from 'svelte/easing';
 
   let selectedFolderId = null;
   let newFolderName = '';
@@ -113,11 +116,17 @@
       <div class="section-divider"></div>
 
       {#each $notes ?? [] as note (note.id)}
-        <NoteCard
-          {note}
-          active={currentNoteId === note.id}
-          on:click={() => goto(`/note/${note.id}`)}
-        />
+        <div
+          in:fly={{ y: 15, duration: 250, easing: quintOut }}
+          out:fade={{ duration: 150 }}
+          animate:flip={{ duration: 300 }}
+        >
+          <NoteCard
+            {note}
+            active={currentNoteId === note.id}
+            on:click={() => goto(`/note/${note.id}`)}
+          />
+        </div>
       {/each}
     </div>
   {/if}
