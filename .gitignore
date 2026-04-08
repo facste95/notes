@@ -7,3 +7,4 @@ dist/
 .env.*
 !.env.example
 vite.config.js.timestamp-*
+.netlify/
