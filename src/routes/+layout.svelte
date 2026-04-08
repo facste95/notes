@@ -2,9 +2,12 @@
   import { onMount } from 'svelte';
   import { sidebarOpen, toggleSidebar, theme, language } from '$lib/stores/ui.js';
   import Sidebar from '$lib/components/Sidebar.svelte';
+  import Onboarding from '$lib/components/Onboarding.svelte';
   import { db } from '$lib/db.js';
   import { setupI18n, locale } from '$lib/i18n.js';
   import { buildIndex } from '$lib/search.js';
+
+  let showOnboarding = false;
 
   function handleKeydown(e) {
     if ((e.ctrlKey || e.metaKey) && e.key === '\\') {
@@ -23,6 +26,9 @@
     const lang = langPref?.value ?? null;
     setupI18n(lang);
     if (lang) language.set(lang);
+
+    const onboarded = await db.prefs.get('onboardingCompleted');
+    if (!onboarded) showOnboarding = true;
   });
 
   // Sync language store with svelte-i18n locale
@@ -36,6 +42,9 @@
   <main class="main-content">
     <slot />
   </main>
+  {#if showOnboarding}
+    <Onboarding on:complete={() => showOnboarding = false} />
+  {/if}
 </div>
 
 <style>
