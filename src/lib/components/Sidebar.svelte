@@ -167,7 +167,7 @@
     background: none; border: none; cursor: pointer; color: var(--color-text-faint);
     padding: 0 0.5rem;
   }
-  .delete-folder-btn:hover { color: #e44; }
+  .delete-folder-btn:hover { color: var(--color-text); }
   .new-folder-input { display: flex; gap: 0.25rem; padding: 0.25rem 0.75rem; }
   .new-folder-input input {
     flex: 1; font-size: 0.8rem; padding: 0.25rem; border: 1px solid var(--color-border); border-radius: 3px;
