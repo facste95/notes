@@ -1,0 +1,70 @@
+{
+  "app": { "name": "Folia" },
+  "sidebar": {
+    "allNotes": "Tutte le note",
+    "newNote": "+ Nota",
+    "newFolder": "+ Cartella",
+    "folderNamePlaceholder": "Nome cartella",
+    "search": "Cerca..."
+  },
+  "editor": {
+    "titlePlaceholder": "Titolo",
+    "contentPlaceholder": "Inizia a scrivere...",
+    "toggleRich": "Rich",
+    "toggleMarkdown": "MD",
+    "notFound": "Nota non trovata."
+  },
+  "toolbar": {
+    "bold": "Grassetto",
+    "italic": "Corsivo",
+    "h1": "Titolo 1",
+    "h2": "Titolo 2",
+    "h3": "Titolo 3",
+    "list": "Lista"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "theme": "Tema",
+    "themeLight": "Chiaro",
+    "themeDark": "Scuro",
+    "language": "Lingua",
+    "editorDefault": "Editor predefinito",
+    "editorRich": "Rich text",
+    "editorMarkdown": "Markdown",
+    "aiTitle": "Intelligenza Artificiale",
+    "apiKeyLabel": "Chiave API Anthropic",
+    "apiKeyPlaceholder": "sk-ant-...",
+    "rememberKey": "Ricorda tra le sessioni",
+    "apiKeyNote": "La chiave viene inviata solo ad Anthropic tramite proxy. Non viene mai salvata sul server."
+  },
+  "onboarding": {
+    "step1Title": "Scegli la lingua",
+    "step2Title": "Scegli il tema",
+    "step3Title": "Editor predefinito",
+    "step4Title": "Chiave API (opzionale)",
+    "skip": "Salta",
+    "next": "Avanti",
+    "finish": "Inizia a scrivere",
+    "apiKeyOptional": "Puoi aggiungere la chiave in seguito dalle Impostazioni."
+  },
+  "common": {
+    "confirm": "Conferma",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "save": "Salva",
+    "edit": "Modifica",
+    "close": "Chiudi",
+    "emptyState": "Nessuna nota. Creane una dalla sidebar."
+  },
+  "ai": {
+    "summarize": "Riassumi",
+    "improve": "Migliora testo",
+    "continue": "Continua",
+    "generateTags": "Genera tag",
+    "translate": "Traduci",
+    "selectLanguage": "Seleziona lingua",
+    "loading": "Elaborazione...",
+    "noApiKey": "Inserisci una chiave API nelle impostazioni per usare l'AI.",
+    "error": "Errore durante la richiesta AI."
+  }
+}

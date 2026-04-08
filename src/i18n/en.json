@@ -1,0 +1,70 @@
+{
+  "app": { "name": "Folia" },
+  "sidebar": {
+    "allNotes": "All notes",
+    "newNote": "+ Note",
+    "newFolder": "+ Folder",
+    "folderNamePlaceholder": "Folder name",
+    "search": "Search..."
+  },
+  "editor": {
+    "titlePlaceholder": "Title",
+    "contentPlaceholder": "Start writing...",
+    "toggleRich": "Rich",
+    "toggleMarkdown": "MD",
+    "notFound": "Note not found."
+  },
+  "toolbar": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "h1": "Heading 1",
+    "h2": "Heading 2",
+    "h3": "Heading 3",
+    "list": "List"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language",
+    "editorDefault": "Default editor",
+    "editorRich": "Rich text",
+    "editorMarkdown": "Markdown",
+    "aiTitle": "Artificial Intelligence",
+    "apiKeyLabel": "Anthropic API Key",
+    "apiKeyPlaceholder": "sk-ant-...",
+    "rememberKey": "Remember between sessions",
+    "apiKeyNote": "The key is sent only to Anthropic through a proxy. It is never stored on the server."
+  },
+  "onboarding": {
+    "step1Title": "Choose language",
+    "step2Title": "Choose theme",
+    "step3Title": "Default editor",
+    "step4Title": "API Key (optional)",
+    "skip": "Skip",
+    "next": "Next",
+    "finish": "Start writing",
+    "apiKeyOptional": "You can add the key later from Settings."
+  },
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "save": "Save",
+    "edit": "Edit",
+    "close": "Close",
+    "emptyState": "No notes yet. Create one from the sidebar."
+  },
+  "ai": {
+    "summarize": "Summarize",
+    "improve": "Improve text",
+    "continue": "Continue writing",
+    "generateTags": "Generate tags",
+    "translate": "Translate",
+    "selectLanguage": "Select language",
+    "loading": "Processing...",
+    "noApiKey": "Add an API key in settings to use AI.",
+    "error": "Error during AI request."
+  }
+}
