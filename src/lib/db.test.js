@@ -1,6 +1,7 @@
 // src/lib/db.test.js
 import 'fake-indexeddb/auto';
 import { db } from './db.js';
+import { trashNote, restoreNote, purgeNote, emptyTrash, autopurgeTrash } from './db.js';
 
 beforeEach(async () => {
   await db.delete();
@@ -56,5 +57,64 @@ describe('prefs', () => {
     await db.prefs.put({ key: 'theme', value: 'dark' });
     const pref = await db.prefs.get('theme');
     expect(pref.value).toBe('dark');
+  });
+});
+
+describe('trash', () => {
+  async function makeNote(title = 'Note') {
+    return db.notes.add({
+      folderId: null, title, content: '', editorMode: 'rich',
+      tags: [], createdAt: Date.now(), updatedAt: Date.now()
+    });
+  }
+
+  test('trashNote sets deletedAt', async () => {
+    const id = await makeNote('Trash me');
+    await trashNote(id);
+    const note = await db.notes.get(id);
+    expect(note.deletedAt).toBeGreaterThan(0);
+  });
+
+  test('restoreNote clears deletedAt', async () => {
+    const id = await makeNote('Restore me');
+    await trashNote(id);
+    await restoreNote(id);
+    const note = await db.notes.get(id);
+    expect(note.deletedAt).toBeNull();
+  });
+
+  test('purgeNote permanently deletes', async () => {
+    const id = await makeNote('Purge me');
+    await trashNote(id);
+    await purgeNote(id);
+    const note = await db.notes.get(id);
+    expect(note).toBeUndefined();
+  });
+
+  test('emptyTrash deletes all trashed notes', async () => {
+    const id1 = await makeNote('A');
+    const id2 = await makeNote('B');
+    const id3 = await makeNote('C'); // not trashed
+    await trashNote(id1);
+    await trashNote(id2);
+    await emptyTrash();
+    expect(await db.notes.get(id1)).toBeUndefined();
+    expect(await db.notes.get(id2)).toBeUndefined();
+    expect(await db.notes.get(id3)).toBeDefined(); // untouched
+  });
+
+  test('autopurgeTrash removes notes trashed > 30 days ago', async () => {
+    const id = await makeNote('Old trash');
+    const oldTs = Date.now() - 31 * 24 * 60 * 60 * 1000;
+    await db.notes.update(id, { deletedAt: oldTs });
+    await autopurgeTrash();
+    expect(await db.notes.get(id)).toBeUndefined();
+  });
+
+  test('autopurgeTrash keeps notes trashed < 30 days ago', async () => {
+    const id = await makeNote('Recent trash');
+    await trashNote(id); // now
+    await autopurgeTrash();
+    expect(await db.notes.get(id)).toBeDefined();
   });
 });
