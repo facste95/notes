@@ -149,6 +149,10 @@
   }
   :global(.tiptap-editor .ProseMirror) {
     outline: none; min-height: 400px; line-height: 1.8; font-size: 1rem;
+    color: var(--color-text);
+  }
+  :global(.tiptap-editor .ProseMirror p) {
+    color: var(--color-text);
   }
   .markdown-split { display: flex; gap: 1rem; height: calc(100vh - 200px); }
   .md-source {
