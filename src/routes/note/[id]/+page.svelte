@@ -7,19 +7,27 @@
   import { quintOut } from 'svelte/easing';
 
   let note = null;
+  let _loadGeneration = 0;
 
   $: loadNote($page.params.id);
 
   async function loadNote(idParam) {
     const id = Number(idParam);
     if (!id) return;
-    const n = await db.notes.get(id);
-    if (n) {
-      note = n;
-      setActiveNote(n);
-      editorMode.set(n.editorMode ?? 'rich');
-      await db.prefs.put({ key: 'lastOpenedNoteId', value: id });
-    } else {
+    const gen = ++_loadGeneration;
+    try {
+      const n = await db.notes.get(id);
+      if (gen !== _loadGeneration) return; // superseded by a newer navigation
+      if (n) {
+        note = n;
+        setActiveNote(n);
+        editorMode.set(n.editorMode ?? 'rich');
+        await db.prefs.put({ key: 'lastOpenedNoteId', value: id });
+      } else {
+        note = null;
+      }
+    } catch (err) {
+      console.error('Failed to load note', id, err);
       note = null;
     }
   }
