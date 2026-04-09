@@ -3,7 +3,7 @@
   import { sidebarOpen, toggleSidebar, theme, language } from '$lib/stores/ui.js';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import Onboarding from '$lib/components/Onboarding.svelte';
-  import { db } from '$lib/db.js';
+  import { db, autopurgeTrash } from '$lib/db.js';
   import { setupI18n, locale } from '$lib/i18n.js';
   import { buildIndex } from '$lib/search.js';
 
@@ -17,8 +17,11 @@
   }
 
   onMount(async () => {
-    // Initialize FlexSearch index
-    const allNotes = await db.notes.toArray();
+    // Auto-purge notes trashed > 30 days ago
+    await autopurgeTrash();
+
+    // Initialize FlexSearch index (only active notes)
+    const allNotes = await db.notes.filter(n => !n.deletedAt).toArray();
     buildIndex(allNotes);
 
     // Initialize i18n
