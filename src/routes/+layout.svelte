@@ -1,8 +1,10 @@
 <script>
   import { onMount } from 'svelte';
-  import { sidebarOpen, toggleSidebar, theme, language } from '$lib/stores/ui.js';
+  import { sidebarOpen, toggleSidebar, theme, language, showSettings, showPalette } from '$lib/stores/ui.js';
   import Sidebar from '$lib/components/Sidebar.svelte';
   import Onboarding from '$lib/components/Onboarding.svelte';
+  import SettingsModal from '$lib/components/SettingsModal.svelte';
+  import CommandPalette from '$lib/components/CommandPalette.svelte';
   import { db, autopurgeTrash } from '$lib/db.js';
   import { setupI18n, locale } from '$lib/i18n.js';
   import { buildIndex } from '$lib/search.js';
@@ -14,27 +16,30 @@
       e.preventDefault();
       toggleSidebar();
     }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      showPalette.set(true);
+    }
   }
 
   onMount(async () => {
-    // Auto-purge notes trashed > 30 days ago
     await autopurgeTrash();
 
-    // Initialize FlexSearch index (only active notes)
     const allNotes = await db.notes.filter(n => !n.deletedAt).toArray();
     buildIndex(allNotes);
 
-    // Initialize i18n
     const langPref = await db.prefs.get('language');
     const lang = langPref?.value ?? null;
     setupI18n(lang);
     if (lang) language.set(lang);
 
+    const themePref = await db.prefs.get('theme');
+    if (themePref?.value) theme.set(themePref.value);
+
     const onboarded = await db.prefs.get('onboardingCompleted');
     if (!onboarded) showOnboarding = true;
   });
 
-  // Sync language store with svelte-i18n locale
   $: if (typeof $language === 'string') locale.set($language);
 </script>
 
@@ -47,6 +52,12 @@
   </main>
   {#if showOnboarding}
     <Onboarding on:complete={() => showOnboarding = false} />
+  {/if}
+  {#if $showSettings}
+    <SettingsModal />
+  {/if}
+  {#if $showPalette}
+    <CommandPalette />
   {/if}
 </div>
 
@@ -83,14 +94,6 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  .app {
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-  }
-  .main-content {
-    flex: 1;
-    overflow-y: auto;
-    background: var(--color-bg);
-  }
+  .app { display: flex; height: 100vh; overflow: hidden; }
+  .main-content { flex: 1; overflow-y: auto; background: var(--color-bg); }
 </style>
