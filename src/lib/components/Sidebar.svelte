@@ -2,7 +2,7 @@
   import { liveQuery } from 'dexie';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
-  import { db } from '$lib/db.js';
+  import { db, trashNote } from '$lib/db.js';
   import { sidebarOpen } from '$lib/stores/ui.js';
   import NoteCard from './NoteCard.svelte';
   import FolderItem from './FolderItem.svelte';
@@ -13,7 +13,6 @@
   import SearchBar from './SearchBar.svelte';
   import TagBadge from './TagBadge.svelte';
   import { searchNotes } from '$lib/search.js';
-  import { trashNote } from '$lib/db.js';
   import TrashSection from './TrashSection.svelte';
 
   let selectedFolderId = null;
@@ -144,11 +143,11 @@
         class:drag-over={dragOverAllNotes}
         on:click={() => { selectedFolderId = null; showTrash = false; }}
         on:dragover={(e) => { e.preventDefault(); dragOverAllNotes = true; }}
-        on:dragleave={() => { dragOverAllNotes = false; }}
+        on:dragleave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) dragOverAllNotes = false; }}
         on:drop={dropOnAllNotes}
         role="button"
         tabindex="0"
-        on:keydown={e => e.key === 'Enter' && (selectedFolderId = null)}
+        on:keydown={e => { if (e.key === 'Enter') { selectedFolderId = null; showTrash = false; } }}
       >
         <span class="icon"><Folder size={14} /></span>
         <span>Tutte le note</span>
@@ -162,7 +161,7 @@
           class="folder-row"
           class:drag-over={dragOverFolderId === folder.id}
           on:dragover={(e) => { e.preventDefault(); dragOverFolderId = folder.id; }}
-          on:dragleave={() => { dragOverFolderId = null; }}
+          on:dragleave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) dragOverFolderId = null; }}
           on:drop={(e) => dropOnFolder(e, folder.id)}
         >
           <FolderItem
