@@ -3,10 +3,10 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { db, trashNote } from '$lib/db.js';
-  import { sidebarOpen } from '$lib/stores/ui.js';
+  import { sidebarOpen, showSettings, theme } from '$lib/stores/ui.js';
   import NoteCard from './NoteCard.svelte';
   import FolderItem from './FolderItem.svelte';
-  import { Folder, X, Plus, ChevronLeft, ChevronRight, Settings, Trash2 } from 'lucide-svelte';
+  import { Folder, X, Plus, ChevronLeft, ChevronRight, Settings, Trash2, Sun, Moon } from 'lucide-svelte';
   import { fly, fade } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   import { quintOut } from 'svelte/easing';
@@ -119,6 +119,12 @@
     await trashNote(noteId);
     if (currentNoteId === noteId) goto('/');
   }
+
+  function toggleThemeAndSave() {
+    const newTheme = $theme === 'light' ? 'dark' : 'light';
+    theme.set(newTheme);
+    db.prefs.put({ key: 'theme', value: newTheme });
+  }
 </script>
 
 <aside class="sidebar" class:closed={!$sidebarOpen}>
@@ -226,8 +232,19 @@
       {/if}
     </div>
 
-    <!-- Bottom bar: trash toggle + settings -->
+    <!-- Bottom bar: theme toggle + trash + settings -->
     <div class="sidebar-footer">
+      <button
+        class="footer-btn"
+        on:click={toggleThemeAndSave}
+        title={$theme === 'light' ? 'Tema scuro' : 'Tema chiaro'}
+      >
+        {#if $theme === 'light'}
+          <Moon size={15} />
+        {:else}
+          <Sun size={15} />
+        {/if}
+      </button>
       <button
         class="footer-btn"
         class:active={showTrash}
@@ -236,7 +253,7 @@
       >
         <Trash2 size={15} />
       </button>
-      <button class="footer-btn" on:click={() => goto('/settings')} title="Impostazioni">
+      <button class="footer-btn" on:click={() => showSettings.set(true)} title="Impostazioni">
         <Settings size={15} />
       </button>
     </div>
