@@ -1,7 +1,6 @@
 // src/lib/db.test.js
 import 'fake-indexeddb/auto';
-import { db } from './db.js';
-import { trashNote, restoreNote, purgeNote, emptyTrash, autopurgeTrash } from './db.js';
+import { db, trashNote, restoreNote, purgeNote, emptyTrash, autopurgeTrash } from './db.js';
 
 beforeEach(async () => {
   await db.delete();
