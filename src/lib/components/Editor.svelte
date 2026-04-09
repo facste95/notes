@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { Editor } from '@tiptap/core';
   import StarterKit from '@tiptap/starter-kit';
+  import { Markdown } from 'tiptap-markdown';
   import { db } from '$lib/db.js';
   import { editorMode, setEditorMode } from '$lib/stores/editor.js';
   import { isWriting } from '$lib/stores/ui.js';
@@ -24,7 +25,7 @@
   onMount(() => {
     tiptap = new Editor({
       element: editorEl,
-      extensions: [StarterKit],
+      extensions: [StarterKit, Markdown],
       content: $editorMode === 'rich' ? (note.content || '') : '',
       onUpdate: () => {
         scheduleSave(() => tiptap.getHTML());
@@ -76,11 +77,21 @@
   async function toggleMode() {
     const newMode = $editorMode === 'rich' ? 'markdown' : 'rich';
 
+    // Flush pending save before switching mode
+    clearTimeout(saveTimer);
+    const currentContent = $editorMode === 'rich' ? (tiptap?.getHTML() ?? '') : markdownContent;
+    await db.notes.update(note.id, {
+      title,
+      content: currentContent,
+      editorMode: $editorMode,
+      updatedAt: Date.now()
+    });
+
     if (newMode === 'markdown') {
-      // Convert HTML to plain text for markdown editing
-      markdownContent = tiptap?.getText() ?? '';
+      // Serialize rich content to proper Markdown (preserves bold, headings, lists, etc.)
+      markdownContent = tiptap?.storage.markdown.getMarkdown() ?? '';
     } else {
-      // Set rich editor content from markdown text
+      // Parse Markdown back to rich text
       tiptap?.commands.setContent(markdownContent || '');
     }
 
