@@ -7,7 +7,4 @@ dist/
 .env.*
 !.env.example
 vite.config.js.timestamp-*
-<<<<<<< Updated upstream
 .netlify/
-=======
->>>>>>> Stashed changes

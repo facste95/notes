@@ -12,7 +12,7 @@
   }
 
   function excerpt(content) {
-    const text = content.replace(/<[^>]+>/g, '').slice(0, 80);
+    const text = (content ?? '').replace(/<[^>]+>/g, '').slice(0, 80);
     return text || 'Nota vuota';
   }
 
