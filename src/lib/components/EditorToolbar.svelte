@@ -4,6 +4,7 @@
   export let editor = null;
   export let mode = 'rich';
   export let showAIPanel = false;
+  export let editorVersion = 0;
 
   const dispatch = createEventDispatcher();
 
@@ -11,16 +12,46 @@
     if (!editor) return;
     editor.chain().focus()[command](attrs).run();
   }
+
+  // Reactive active states — recalculated on every editor transaction.
+  // The comma operator reads editorVersion (establishing Svelte reactivity dependency)
+  // then evaluates and returns the isActive() call result.
+  $: boldActive   = (editorVersion, editor?.isActive('bold') ?? false);
+  $: italicActive = (editorVersion, editor?.isActive('italic') ?? false);
+  $: h1Active     = (editorVersion, editor?.isActive('heading', { level: 1 }) ?? false);
+  $: h2Active     = (editorVersion, editor?.isActive('heading', { level: 2 }) ?? false);
+  $: h3Active     = (editorVersion, editor?.isActive('heading', { level: 3 }) ?? false);
+  $: bulletActive = (editorVersion, editor?.isActive('bulletList') ?? false);
 </script>
 
 <div class="toolbar">
   {#if mode === 'rich'}
-    <button on:click={() => cmd('toggleBold')} title="Grassetto (Ctrl+B)"><b>B</b></button>
-    <button on:click={() => cmd('toggleItalic')} title="Corsivo (Ctrl+I)"><i>I</i></button>
-    <button on:click={() => cmd('toggleHeading', { level: 1 })}>H1</button>
-    <button on:click={() => cmd('toggleHeading', { level: 2 })}>H2</button>
-    <button on:click={() => cmd('toggleHeading', { level: 3 })}>H3</button>
-    <button on:click={() => cmd('toggleBulletList')}>• Lista</button>
+    <button
+      on:click={() => cmd('toggleBold')}
+      class:active={boldActive}
+      title="Grassetto (Ctrl+B)"
+    ><b>B</b></button>
+    <button
+      on:click={() => cmd('toggleItalic')}
+      class:active={italicActive}
+      title="Corsivo (Ctrl+I)"
+    ><i>I</i></button>
+    <button
+      on:click={() => cmd('toggleHeading', { level: 1 })}
+      class:active={h1Active}
+    >H1</button>
+    <button
+      on:click={() => cmd('toggleHeading', { level: 2 })}
+      class:active={h2Active}
+    >H2</button>
+    <button
+      on:click={() => cmd('toggleHeading', { level: 3 })}
+      class:active={h3Active}
+    >H3</button>
+    <button
+      on:click={() => cmd('toggleBulletList')}
+      class:active={bulletActive}
+    >• Lista</button>
     <div class="separator"></div>
   {/if}
 
@@ -53,6 +84,11 @@
     color: var(--color-text);
   }
   button:hover { background: var(--color-hover); border-color: var(--color-border); }
+  button.active {
+    background: var(--color-hover);
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
   .separator { width: 1px; height: 1.2rem; background: var(--color-border); margin: 0 0.25rem; }
   .mode-toggle { margin-left: auto; font-size: 0.75rem; color: var(--color-text-muted); }
   .ai-btn { display: flex; align-items: center; }

@@ -17,6 +17,7 @@
   let writingTimer;
   let saveTimer;
   let showAIPanel = false;
+  let editorVersion = 0;
 
   const DEBOUNCE_MS = 800;
 
@@ -28,6 +29,9 @@
       onUpdate: () => {
         scheduleSave(() => tiptap.getHTML());
         triggerWriting();
+      },
+      onTransaction: () => {
+        editorVersion++;
       }
     });
   });
@@ -93,6 +97,7 @@
       editor={tiptap}
       mode={$editorMode}
       {showAIPanel}
+      {editorVersion}
       on:toggleMode={toggleMode}
       on:toggleAI={() => (showAIPanel = !showAIPanel)}
     />
