@@ -12,7 +12,9 @@
     "contentPlaceholder": "Start writing...",
     "toggleRich": "Rich",
     "toggleMarkdown": "MD",
-    "notFound": "Note not found."
+    "notFound": "Note not found.",
+    "downloadMd": "Download .md",
+    "downloadTxt": "Download .txt"
   },
   "toolbar": {
     "bold": "Bold",
@@ -20,7 +22,18 @@
     "h1": "Heading 1",
     "h2": "Heading 2",
     "h3": "Heading 3",
-    "list": "List"
+    "list": "List",
+    "code": "Code",
+    "colorText": "Text color"
+  },
+  "tags": {
+    "add": "+ tag",
+    "placeholder": "Tag name..."
+  },
+  "commandPalette": {
+    "placeholder": "Search notes...",
+    "noResults": "No results found.",
+    "recent": "Recent notes"
   },
   "settings": {
     "title": "Settings",
@@ -35,7 +48,9 @@
     "apiKeyLabel": "Anthropic API Key",
     "apiKeyPlaceholder": "sk-ant-...",
     "rememberKey": "Remember between sessions",
-    "apiKeyNote": "The key is sent only to Anthropic through a proxy. It is never stored on the server."
+    "apiKeyNote": "The key is sent only to Anthropic through a proxy. It is never stored on the server.",
+    "backup": "Backup",
+    "restore": "Restore"
   },
   "onboarding": {
     "step1Title": "Choose language",
