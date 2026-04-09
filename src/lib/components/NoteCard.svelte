@@ -48,9 +48,15 @@
     padding: 0.75rem 0.75rem 0.75rem 1rem;
     cursor: pointer;
     border-bottom: 1px solid var(--color-border);
+    border-left: 2px solid transparent;
     gap: 0.5rem;
   }
-  .note-card:hover, .note-card.active { background: var(--color-hover); }
+  .note-card:hover { background: var(--color-hover); }
+  .note-card.active {
+    background: var(--color-surface);
+    border-left-color: var(--color-accent);
+    padding-left: calc(1rem - 2px);
+  }
   .note-card:hover .trash-btn { opacity: 1; }
   .note-main { flex: 1; min-width: 0; }
   .note-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; }
