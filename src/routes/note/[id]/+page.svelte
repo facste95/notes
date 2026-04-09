@@ -1,6 +1,5 @@
 <script>
   import { page } from '$app/stores';
-  import { onMount } from 'svelte';
   import { db } from '$lib/db.js';
   import { setActiveNote, editorMode } from '$lib/stores/editor.js';
   import Editor from '$lib/components/Editor.svelte';
@@ -9,21 +8,33 @@
 
   let note = null;
 
-  onMount(async () => {
-    const id = Number($page.params.id);
-    note = await db.notes.get(id);
-    if (note) {
-      setActiveNote(note);
-      editorMode.set(note.editorMode ?? 'rich');
+  $: loadNote($page.params.id);
+
+  async function loadNote(idParam) {
+    const id = Number(idParam);
+    if (!id) return;
+    const n = await db.notes.get(id);
+    if (n) {
+      note = n;
+      setActiveNote(n);
+      editorMode.set(n.editorMode ?? 'rich');
       await db.prefs.put({ key: 'lastOpenedNoteId', value: id });
+    } else {
+      note = null;
     }
-  });
+  }
 </script>
 
 {#if note}
-  <div in:fly={{ x: 30, duration: 350, easing: quintOut }}>
-    <Editor {note} />
-  </div>
+  {#key note.id}
+    <div in:fly={{ x: 30, duration: 350, easing: quintOut }}>
+      <Editor {note} />
+    </div>
+  {/key}
 {:else}
-  <div class="not-found" style="padding: 2rem; color: #888;">Nota non trovata.</div>
+  <div class="not-found">Nota non trovata.</div>
 {/if}
+
+<style>
+  .not-found { padding: 2rem; color: var(--color-text-muted); }
+</style>
