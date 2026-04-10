@@ -5,6 +5,7 @@
   export let mode = 'rich';
   export let showAIPanel = false;
   export let editorVersion = 0;
+  export let mdTextarea = null;
 
   const dispatch = createEventDispatcher();
   let showDownload = false;
@@ -15,6 +16,57 @@
   }
 
   function closeDownload() { showDownload = false; }
+
+  function insertMdSyntax(type) {
+    if (!mdTextarea) return;
+    const val = mdTextarea.value;
+    const start = mdTextarea.selectionStart;
+    const end = mdTextarea.selectionEnd;
+    const selected = val.slice(start, end);
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = val.indexOf('\n', start);
+    const currentLine = val.slice(lineStart, lineEnd === -1 ? val.length : lineEnd);
+
+    let newValue, newStart, newEnd;
+
+    if (type === 'bold') {
+      const inner = selected || 'testo';
+      newValue = val.slice(0, start) + `**${inner}**` + val.slice(end);
+      newStart = selected ? start + 2 : start + 2;
+      newEnd = selected ? end + 2 : start + 2 + inner.length;
+    } else if (type === 'italic') {
+      const inner = selected || 'testo';
+      newValue = val.slice(0, start) + `*${inner}*` + val.slice(end);
+      newStart = selected ? start + 1 : start + 1;
+      newEnd = selected ? end + 1 : start + 1 + inner.length;
+    } else if (type === 'code') {
+      const inner = selected || 'codice';
+      newValue = val.slice(0, start) + '`' + inner + '`' + val.slice(end);
+      newStart = selected ? start + 1 : start + 1;
+      newEnd = selected ? end + 1 : start + 1 + inner.length;
+    } else if (type === 'h1' || type === 'h2' || type === 'h3') {
+      const prefix = { h1: '# ', h2: '## ', h3: '### ' }[type];
+      const stripped = currentLine.replace(/^#{1,6}\s/, '');
+      const lineEndIdx = lineEnd === -1 ? val.length : lineEnd;
+      newValue = val.slice(0, lineStart) + prefix + stripped + val.slice(lineEndIdx);
+      newStart = lineStart + prefix.length;
+      newEnd = lineStart + prefix.length + stripped.length;
+    } else if (type === 'list') {
+      const lineEndIdx = lineEnd === -1 ? val.length : lineEnd;
+      newValue = val.slice(0, lineStart) + '- ' + currentLine + val.slice(lineEndIdx);
+      newStart = start + 2;
+      newEnd = end + 2;
+    } else {
+      return;
+    }
+
+    mdTextarea.value = newValue;
+    mdTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+    setTimeout(() => {
+      mdTextarea.setSelectionRange(newStart, newEnd);
+      mdTextarea.focus();
+    }, 0);
+  }
 
   $: boldActive   = (editorVersion, editor?.isActive('bold') ?? false);
   $: italicActive = (editorVersion, editor?.isActive('italic') ?? false);
@@ -35,6 +87,16 @@
     <button on:click={() => cmd('toggleHeading', { level: 3 })} class:active={h3Active}>H3</button>
     <button on:click={() => cmd('toggleBulletList')} class:active={bulletActive}>• Lista</button>
     <div class="separator"></div>
+  {:else if mode === 'markdown'}
+    <button on:click={() => insertMdSyntax('bold')} title="Grassetto"><b>B</b></button>
+    <button on:click={() => insertMdSyntax('italic')} title="Corsivo"><i>I</i></button>
+    <button on:click={() => insertMdSyntax('h1')}>H1</button>
+    <button on:click={() => insertMdSyntax('h2')}>H2</button>
+    <button on:click={() => insertMdSyntax('h3')}>H3</button>
+    <button on:click={() => insertMdSyntax('list')}>• Lista</button>
+    <button on:click={() => insertMdSyntax('code')} title="Codice">`c`</button>
+    <div class="separator"></div>
+    <!-- Color picker section added in Task 14 -->
   {/if}
 
   <!-- Right side controls -->
