@@ -1,17 +1,20 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { Sparkles, Paintbrush, Code2 } from 'lucide-svelte';
+  import { Sparkles, Paintbrush, Code2, Download } from 'lucide-svelte';
   export let editor = null;
   export let mode = 'rich';
   export let showAIPanel = false;
   export let editorVersion = 0;
 
   const dispatch = createEventDispatcher();
+  let showDownload = false;
 
   function cmd(command, attrs = {}) {
     if (!editor) return;
     editor.chain().focus()[command](attrs).run();
   }
+
+  function closeDownload() { showDownload = false; }
 
   $: boldActive   = (editorVersion, editor?.isActive('bold') ?? false);
   $: italicActive = (editorVersion, editor?.isActive('italic') ?? false);
@@ -20,6 +23,8 @@
   $: h3Active     = (editorVersion, editor?.isActive('heading', { level: 3 }) ?? false);
   $: bulletActive = (editorVersion, editor?.isActive('bulletList') ?? false);
 </script>
+
+<svelte:window on:click={e => { if (!e.target.closest('.download-wrapper')) closeDownload(); }} />
 
 <div class="toolbar">
   {#if mode === 'rich'}
@@ -48,6 +53,25 @@
         title="Markdown"
       ><Code2 size={13} /></button>
     </div>
+
+    <div class="download-wrapper">
+      <button
+        class="icon-btn"
+        on:click={() => showDownload = !showDownload}
+        title="Scarica nota"
+      ><Download size={14} /></button>
+      {#if showDownload}
+        <div class="download-dropdown">
+          <button on:click={() => { dispatch('downloadNote', { format: 'md' }); closeDownload(); }}>
+            .md
+          </button>
+          <button on:click={() => { dispatch('downloadNote', { format: 'txt' }); closeDownload(); }}>
+            .txt
+          </button>
+        </div>
+      {/if}
+    </div>
+
     <button
       class="ai-btn icon-btn"
       class:active={showAIPanel}
@@ -98,4 +122,19 @@
   }
   .icon-btn { display: inline-flex; align-items: center; }
   .ai-btn.active { background: var(--color-hover); border-color: var(--color-border); }
+  .download-wrapper { position: relative; }
+  .download-dropdown {
+    position: absolute; top: calc(100% + 6px); right: 0; z-index: 20;
+    background: var(--color-bg); border: 1px solid var(--color-border);
+    border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden; min-width: 100px;
+  }
+  .download-dropdown button {
+    display: block; width: 100%; text-align: left;
+    padding: 0.4rem 0.75rem; border: none; border-radius: 0;
+    font-size: 0.85rem; cursor: pointer;
+    background: var(--color-bg); color: var(--color-text);
+    font-family: inherit;
+  }
+  .download-dropdown button:hover { background: var(--color-hover); }
 </style>
