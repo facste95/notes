@@ -1,6 +1,8 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
+  import { marked } from 'marked';
   import { liveQuery } from 'dexie';
+  marked.use({ gfm: true, breaks: true });
   import { Editor } from '@tiptap/core';
   import StarterKit from '@tiptap/starter-kit';
   import { Markdown } from 'tiptap-markdown';
@@ -37,6 +39,8 @@
     const set = new Set(all.flatMap(n => n.tags ?? []));
     return [...set].sort();
   });
+
+  $: renderedHtml = marked.parse(markdownContent || '');
 
   $: filteredSuggestions = tagInput.trim()
     ? ($allTagsQuery ?? []).filter(t =>
@@ -231,7 +235,7 @@
           on:input={onMarkdownInput}
         ></textarea>
         <div class="md-preview">
-          <div class="md-preview-placeholder">Preview (Task 11)</div>
+          {@html renderedHtml}
         </div>
       </div>
     {/if}
@@ -310,6 +314,35 @@
     background: var(--color-surface);
     color: var(--color-text);
   }
-  .md-preview { flex: 1; padding: 1rem; overflow-y: auto; }
-  .md-preview-placeholder { color: var(--color-text-faint); font-style: italic; font-size: 0.9rem; }
+  .md-preview {
+    flex: 1; padding: 1rem; overflow-y: auto;
+    color: var(--color-text);
+    font-family: inherit; font-size: 0.9rem; line-height: 1.7;
+    border-left: 1px solid var(--color-border);
+  }
+  :global(.md-preview h1) { font-size: 1.5rem; font-weight: 700; margin: 0.75rem 0 0.5rem; color: var(--color-text); }
+  :global(.md-preview h2) { font-size: 1.25rem; font-weight: 600; margin: 0.6rem 0 0.4rem; color: var(--color-text); }
+  :global(.md-preview h3) { font-size: 1.05rem; font-weight: 600; margin: 0.5rem 0 0.3rem; color: var(--color-text); }
+  :global(.md-preview p) { margin: 0.4rem 0; color: var(--color-text); }
+  :global(.md-preview strong) { font-weight: 700; color: var(--color-text); }
+  :global(.md-preview em) { font-style: italic; color: var(--color-text); }
+  :global(.md-preview ul), :global(.md-preview ol) { padding-left: 1.5rem; margin: 0.3rem 0; }
+  :global(.md-preview li) { color: var(--color-text); margin: 0.15rem 0; }
+  :global(.md-preview code) {
+    font-family: monospace; font-size: 0.85em;
+    background: var(--color-surface); padding: 0.1em 0.3em;
+    border-radius: 3px; color: var(--color-text);
+  }
+  :global(.md-preview pre) {
+    background: var(--color-surface); padding: 0.75rem;
+    border-radius: 4px; overflow-x: auto; margin: 0.5rem 0;
+  }
+  :global(.md-preview pre code) { background: none; padding: 0; }
+  :global(.md-preview blockquote) {
+    border-left: 3px solid var(--color-border);
+    padding-left: 1rem; color: var(--color-text-muted); margin: 0.5rem 0;
+    font-style: italic;
+  }
+  :global(.md-preview a) { color: var(--color-accent); text-decoration: underline; }
+  :global(.md-preview span[style]) { display: inline; }
 </style>
