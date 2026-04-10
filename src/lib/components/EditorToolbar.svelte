@@ -1,6 +1,8 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { Sparkles, Paintbrush, Code2, Download } from 'lucide-svelte';
+  import { db } from '$lib/db.js';
+
   export let editor = null;
   export let mode = 'rich';
   export let showAIPanel = false;
@@ -9,6 +11,18 @@
 
   const dispatch = createEventDispatcher();
   let showDownload = false;
+
+  const FIXED_COLORS = [
+    '#e74c3c', '#e67e22', '#f39c12', '#2ecc71',
+    '#1abc9c', '#3498db', '#9b59b6', '#e91e63'
+  ];
+  let customColors = [];
+  let colorPickerEl;
+
+  onMount(async () => {
+    const pref = await db.prefs.get('customColors');
+    customColors = pref?.value ?? [];
+  });
 
   function cmd(command, attrs = {}) {
     if (!editor) return;
@@ -68,6 +82,29 @@
     }, 0);
   }
 
+  function applyColor(hex) {
+    if (!mdTextarea) return;
+    const start = mdTextarea.selectionStart;
+    const end = mdTextarea.selectionEnd;
+    const selected = mdTextarea.value.slice(start, end) || 'testo';
+    const wrapped = `<span style="color:${hex}">${selected}</span>`;
+    const newValue = mdTextarea.value.slice(0, start) + wrapped + mdTextarea.value.slice(end);
+    mdTextarea.value = newValue;
+    mdTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+    const newPos = start + wrapped.length;
+    setTimeout(() => {
+      mdTextarea.setSelectionRange(newPos, newPos);
+      mdTextarea.focus();
+    }, 0);
+  }
+
+  async function onColorPicker(e) {
+    const hex = e.target.value;
+    applyColor(hex);
+    customColors = [hex, ...customColors.filter(c => c !== hex)].slice(0, 4);
+    await db.prefs.put({ key: 'customColors', value: customColors });
+  }
+
   $: boldActive   = (editorVersion, editor?.isActive('bold') ?? false);
   $: italicActive = (editorVersion, editor?.isActive('italic') ?? false);
   $: h1Active     = (editorVersion, editor?.isActive('heading', { level: 1 }) ?? false);
@@ -96,7 +133,38 @@
     <button on:click={() => insertMdSyntax('list')}>• Lista</button>
     <button on:click={() => insertMdSyntax('code')} title="Codice">`c`</button>
     <div class="separator"></div>
-    <!-- Color picker section added in Task 14 -->
+    <div class="color-section">
+      {#each FIXED_COLORS as color}
+        <button
+          class="color-dot"
+          style="background:{color}"
+          on:click={() => applyColor(color)}
+          title={color}
+        ></button>
+      {/each}
+      {#each customColors as color}
+        <button
+          class="color-dot color-dot--custom"
+          style="background:{color}"
+          on:click={() => applyColor(color)}
+          title={color}
+        ></button>
+      {/each}
+      <button
+        class="color-picker-trigger"
+        title="Scegli colore"
+        on:click={() => colorPickerEl.click()}
+      >
+        <input
+          bind:this={colorPickerEl}
+          type="color"
+          style="display:none"
+          on:change={onColorPicker}
+        />
+        <span>+</span>
+      </button>
+    </div>
+    <div class="separator"></div>
   {/if}
 
   <!-- Right side controls -->
@@ -199,4 +267,23 @@
     font-family: inherit;
   }
   .download-dropdown button:hover { background: var(--color-hover); }
+  .color-section {
+    display: flex; align-items: center; gap: 0.2rem; flex-wrap: nowrap;
+  }
+  .color-dot {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,0.15); cursor: pointer;
+    padding: 0; flex-shrink: 0; transition: transform 0.1s;
+  }
+  .color-dot:hover { transform: scale(1.2); }
+  .color-dot--custom { border-style: dashed; }
+  .color-picker-trigger {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 1.5px dashed var(--color-border);
+    cursor: pointer; background: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; color: var(--color-text-muted); padding: 0;
+    position: relative; flex-shrink: 0;
+  }
+  .color-picker-trigger:hover { border-color: var(--color-text-faint); color: var(--color-text); }
 </style>
