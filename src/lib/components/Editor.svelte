@@ -314,6 +314,7 @@
     background: var(--color-surface);
     color: var(--color-text);
   }
+  .md-source::placeholder { color: var(--color-text-faint); }
   .md-preview {
     flex: 1; padding: 1rem; overflow-y: auto;
     color: var(--color-text);
