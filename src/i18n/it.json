@@ -50,7 +50,10 @@
     "rememberKey": "Ricorda tra le sessioni",
     "apiKeyNote": "La chiave viene inviata solo ad Anthropic tramite proxy. Non viene mai salvata sul server.",
     "backup": "Backup",
-    "restore": "Ripristina"
+    "restore": "Ripristina",
+    "shortcuts": "Scorciatoie da tastiera",
+    "shortcutSearch": "Cerca note",
+    "shortcutSidebar": "Mostra/nascondi sidebar"
   },
   "onboarding": {
     "step1Title": "Scegli la lingua",

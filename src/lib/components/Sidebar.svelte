@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { db, trashNote } from '$lib/db.js';
-  import { sidebarOpen, showSettings, theme } from '$lib/stores/ui.js';
+  import { sidebarOpen, showSettings, theme, showPalette } from '$lib/stores/ui.js';
   import NoteCard from './NoteCard.svelte';
   import FolderItem from './FolderItem.svelte';
   import ConfirmDialog from './ConfirmDialog.svelte';
@@ -169,7 +169,15 @@
   </div>
 
   {#if $sidebarOpen}
-    <SearchBar on:search={onSearch} placeholder={$_('sidebar.search')} />
+    <div
+      class="search-palette-trigger"
+      role="button"
+      tabindex="0"
+      on:click={() => showPalette.set(true)}
+      on:keydown={e => e.key === 'Enter' && showPalette.set(true)}
+    >
+      <SearchBar placeholder={$_('sidebar.search')} />
+    </div>
     <div class="sidebar-content">
       <!-- All notes row (also a drop target) -->
       <div
@@ -346,6 +354,8 @@
   }
   .toggle-btn:hover { color: var(--color-text); }
   .sidebar-content { overflow-y: auto; flex: 1; }
+  .search-palette-trigger { cursor: pointer; }
+  .search-palette-trigger :global(input) { pointer-events: none; cursor: pointer; }
   .section-divider { height: 1px; background: var(--color-border); margin: 0.25rem 0; }
   .all-notes-row {
     display: flex; align-items: center; gap: 0.4rem;

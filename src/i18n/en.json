@@ -50,7 +50,10 @@
     "rememberKey": "Remember between sessions",
     "apiKeyNote": "The key is sent only to Anthropic through a proxy. It is never stored on the server.",
     "backup": "Backup",
-    "restore": "Restore"
+    "restore": "Restore",
+    "shortcuts": "Keyboard Shortcuts",
+    "shortcutSearch": "Search notes",
+    "shortcutSidebar": "Toggle sidebar"
   },
   "onboarding": {
     "step1Title": "Choose language",

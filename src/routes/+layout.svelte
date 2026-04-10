@@ -7,7 +7,9 @@
   import CommandPalette from '$lib/components/CommandPalette.svelte';
   import { db, autopurgeTrash } from '$lib/db.js';
   import { setupI18n, locale } from '$lib/i18n.js';
-  import { buildIndex } from '$lib/search.js';
+  import { buildIndex, indexNote } from '$lib/search.js';
+  import { goto } from '$app/navigation';
+  import { Menu } from 'lucide-svelte';
 
   let showOnboarding = false;
 
@@ -41,6 +43,20 @@
   });
 
   $: if (typeof $language === 'string') locale.set($language);
+
+  async function createNote() {
+    const id = await db.notes.add({
+      folderId: null,
+      title: '',
+      content: '',
+      editorMode: 'rich',
+      tags: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+    indexNote({ id, title: '', content: '', tags: [] });
+    goto(`/note/${id}`);
+  }
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -52,9 +68,17 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="sidebar-overlay" role="presentation" on:click={() => sidebarOpen.set(false)}></div>
   {/if}
+  {#if !$sidebarOpen}
+    <button class="menu-btn" on:click={toggleSidebar} title="Apri sidebar">
+      <Menu size={20} />
+    </button>
+  {/if}
   <main class="main-content">
     <slot />
   </main>
+  {#if !$sidebarOpen}
+    <button class="fab-new-note" on:click={createNote} title="Nuova nota">+</button>
+  {/if}
   {#if showOnboarding}
     <Onboarding on:complete={() => showOnboarding = false} />
   {/if}
@@ -136,6 +160,9 @@
   /* Mobile overlay behind sidebar */
   .sidebar-overlay { display: none; }
 
+  .menu-btn { display: none; }
+  .fab-new-note { display: none; }
+
   @media (max-width: 768px) {
     .main-content { width: 100%; }
     .sidebar-overlay {
@@ -144,5 +171,44 @@
       background: rgba(0, 0, 0, 0.3);
       backdrop-filter: blur(1px);
     }
+    .menu-btn {
+      display: flex;
+      position: fixed;
+      top: 0.65rem;
+      left: 0.65rem;
+      z-index: 45;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 0.45rem;
+      cursor: pointer;
+      color: var(--color-text-muted);
+      box-shadow: var(--shadow-sm);
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s ease, background-color 0.15s ease;
+    }
+    .menu-btn:hover { color: var(--color-text); background: var(--color-hover); }
+    .fab-new-note {
+      display: flex;
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 45;
+      width: 3.25rem;
+      height: 3.25rem;
+      border-radius: 50%;
+      background: var(--color-accent);
+      color: var(--color-bg);
+      border: none;
+      cursor: pointer;
+      font-size: 1.75rem;
+      line-height: 1;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-md);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .fab-new-note:active { transform: scale(0.93); }
   }
 </style>

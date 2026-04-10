@@ -210,7 +210,6 @@
     padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--color-border);
     background: var(--color-bg); gap: 0;
     transition: background-color 0.3s ease, border-color 0.25s ease;
-    overflow: hidden;
   }
   .toolbar-left {
     display: flex; align-items: center; gap: 0.15rem;

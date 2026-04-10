@@ -12,12 +12,16 @@
   let apiKey = '';
   let rememberKey = false;
   let apiKeyMasked = false;
+  let isMac = false;
 
   onMount(() => {
     const stored = getApiKey();
     if (stored) { apiKey = stored; apiKeyMasked = true; }
     rememberKey = !!localStorage.getItem('foliaApiKey');
+    isMac = navigator.platform.includes('Mac') || navigator.platform.includes('iPhone');
   });
+
+  $: mod = isMac ? '⌘' : 'Ctrl';
 
   function close() { showSettings.set(false); }
 
@@ -162,6 +166,20 @@
         <p class="api-disclaimer">{$_('settings.apiKeyNote')}</p>
       </section>
       {/if}
+
+      <section>
+        <h2>{$_('settings.shortcuts')}</h2>
+        <ul class="shortcuts-list">
+          <li>
+            <span class="shortcut-desc">{$_('settings.shortcutSearch')}</span>
+            <span class="shortcut-keys"><kbd>{mod}</kbd><kbd>K</kbd></span>
+          </li>
+          <li>
+            <span class="shortcut-desc">{$_('settings.shortcutSidebar')}</span>
+            <span class="shortcut-keys"><kbd>{mod}</kbd><kbd>\</kbd></span>
+          </li>
+        </ul>
+      </section>
     </div>
   </div>
 </div>
@@ -260,4 +278,26 @@
   }
   .danger-btn { color: var(--color-text-muted); }
   .danger-btn:hover { color: var(--color-text); border-color: var(--color-text-muted); }
+  .shortcuts-list {
+    list-style: none; display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .shortcuts-list li {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 0.85rem; color: var(--color-text);
+  }
+  .shortcut-desc { color: var(--color-text-muted); }
+  .shortcut-keys { display: flex; gap: 0.25rem; }
+  kbd {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0.15rem 0.45rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 0.75rem;
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: 0 1px 0 var(--color-border);
+    line-height: 1.4;
+    min-width: 1.5rem;
+  }
 </style>
