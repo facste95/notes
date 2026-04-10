@@ -1,5 +1,8 @@
 import { writable } from 'svelte/store';
 
+// Set to true to re-enable AI features (onboarding step, settings section, toolbar button)
+export const AI_ENABLED = false;
+
 const browserLang = typeof navigator !== 'undefined'
   ? (navigator.language?.startsWith('it') ? 'it' : 'en')
   : 'it';

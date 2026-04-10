@@ -2,6 +2,7 @@
   import { onMount, createEventDispatcher } from 'svelte';
   import { Sparkles, Paintbrush, Code2, Download } from 'lucide-svelte';
   import { db } from '$lib/db.js';
+  import { AI_ENABLED } from '$lib/stores/ui.js';
 
   export let editor = null;
   export let mode = 'rich';
@@ -202,12 +203,14 @@
       {/if}
     </div>
 
+    {#if AI_ENABLED}
     <button
       class="ai-btn icon-btn"
       class:active={showAIPanel}
       on:click={() => dispatch('toggleAI')}
       title="AI"
     ><Sparkles size={14} /></button>
+    {/if}
   </div>
 </div>
 

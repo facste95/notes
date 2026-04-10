@@ -3,14 +3,14 @@
   import { fade, fly } from 'svelte/transition';
   import { _ } from 'svelte-i18n';
   import { db } from '$lib/db.js';
-  import { theme, language } from '$lib/stores/ui.js';
+  import { theme, language, AI_ENABLED } from '$lib/stores/ui.js';
   import { editorMode } from '$lib/stores/editor.js';
   import { locale } from '$lib/i18n.js';
 
   const dispatch = createEventDispatcher();
 
   let step = 1;
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = AI_ENABLED ? 4 : 3;
 
   let selectedLang = 'it';
   let selectedTheme = 'light';
@@ -89,7 +89,7 @@
           {$_('settings.editorMarkdown')}
         </button>
       </div>
-    {:else if step === 4}
+    {:else if step === 4 && AI_ENABLED}
       <h2>{$_('onboarding.step4Title')}</h2>
       <p class="hint">{$_('onboarding.apiKeyOptional')}</p>
       <input

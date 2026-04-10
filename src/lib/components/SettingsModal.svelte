@@ -3,7 +3,7 @@
   import { _ } from 'svelte-i18n';
   import { X } from 'lucide-svelte';
   import { db } from '$lib/db.js';
-  import { theme, language, showSettings } from '$lib/stores/ui.js';
+  import { theme, language, showSettings, AI_ENABLED } from '$lib/stores/ui.js';
   import { editorMode } from '$lib/stores/editor.js';
   import { locale } from '$lib/i18n.js';
   import { notesToJson, parseJsonBackup, downloadFile } from '$lib/export.js';
@@ -137,6 +137,7 @@
         </div>
       </section>
 
+      {#if AI_ENABLED}
       <section>
         <h2>{$_('settings.aiTitle')}</h2>
         {#if apiKeyMasked}
@@ -160,6 +161,7 @@
         {/if}
         <p class="api-disclaimer">{$_('settings.apiKeyNote')}</p>
       </section>
+      {/if}
     </div>
   </div>
 </div>
