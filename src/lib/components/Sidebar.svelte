@@ -6,14 +6,16 @@
   import { sidebarOpen, showSettings, theme } from '$lib/stores/ui.js';
   import NoteCard from './NoteCard.svelte';
   import FolderItem from './FolderItem.svelte';
-  import { Folder, X, Plus, ChevronLeft, ChevronRight, Settings, Trash2, Sun, Moon } from 'lucide-svelte';
+  import ConfirmDialog from './ConfirmDialog.svelte';
+  import { FilePlus, FolderPlus, X, ChevronLeft, ChevronRight, Settings, Trash2, Sun, Moon } from 'lucide-svelte';
   import { fly, fade } from 'svelte/transition';
   import { flip } from 'svelte/animate';
   import { quintOut } from 'svelte/easing';
   import SearchBar from './SearchBar.svelte';
   import TagBadge from './TagBadge.svelte';
-  import { searchNotes } from '$lib/search.js';
+  import { searchNotes, indexNote, removeNote } from '$lib/search.js';
   import TrashSection from './TrashSection.svelte';
+  import { _ } from 'svelte-i18n';
 
   let selectedFolderId = null;
   let newFolderName = '';
@@ -22,6 +24,7 @@
   let searchResults = [];
   let selectedTag = null;
   let showTrash = false;
+  let confirmAction = null; // { type: 'deleteFolder', folder }
 
   // Reactive queries — re-execute when selectedFolderId changes
   $: notes = liveQuery(async () => {
@@ -39,11 +42,24 @@
   const folders = liveQuery(() => db.folders.orderBy('name').toArray());
   const allCount = liveQuery(() => db.notes.filter(n => !n.deletedAt).count());
   const allNotes = liveQuery(() => db.notes.filter(n => !n.deletedAt).toArray());
-  const allTags = liveQuery(async () => {
-    const all = await db.notes.filter(n => !n.deletedAt).toArray();
-    const tags = new Set(all.flatMap(n => n.tags ?? []));
-    return [...tags].sort();
+
+  // Tag section: folder-aware — show only tags from current folder's notes
+  $: allTags = liveQuery(async () => {
+    let notesForTags;
+    if (selectedFolderId === null) {
+      notesForTags = await db.notes.filter(n => !n.deletedAt).toArray();
+    } else {
+      notesForTags = await db.notes
+        .where('folderId').equals(selectedFolderId)
+        .filter(n => !n.deletedAt).toArray();
+    }
+    return [...new Set(notesForTags.flatMap(n => n.tags ?? []))].sort();
   });
+
+  // Reset selected tag if it no longer exists in the current folder
+  $: if (selectedTag && ($allTags ?? []).length > 0 && !($allTags ?? []).includes(selectedTag)) {
+    selectedTag = null;
+  }
 
   async function createNote() {
     const id = await db.notes.add({
@@ -55,6 +71,7 @@
       createdAt: Date.now(),
       updatedAt: Date.now()
     });
+    indexNote({ id, title: '', content: '', tags: [] });
     goto(`/note/${id}`);
   }
 
@@ -65,11 +82,22 @@
     showNewFolder = false;
   }
 
-  async function deleteFolder(folder) {
-    if (!confirm(`Eliminare la cartella "${folder.name}"? Le note rimarranno senza cartella.`)) return;
-    await db.notes.where('folderId').equals(folder.id).modify({ folderId: null });
-    await db.folders.delete(folder.id);
-    if (selectedFolderId === folder.id) selectedFolderId = null;
+  function requestDeleteFolder(folder) {
+    confirmAction = { type: 'deleteFolder', folder };
+  }
+
+  async function executeConfirm() {
+    if (confirmAction?.type === 'deleteFolder') {
+      const folder = confirmAction.folder;
+      await db.notes.where('folderId').equals(folder.id).modify({ folderId: null });
+      await db.folders.delete(folder.id);
+      if (selectedFolderId === folder.id) selectedFolderId = null;
+    }
+    confirmAction = null;
+  }
+
+  async function renameFolder(folder, newName) {
+    await db.folders.update(folder.id, { name: newName });
   }
 
   function getFolderCount(folderId, allNotesList) {
@@ -117,6 +145,7 @@
 
   async function handleTrashNote(noteId) {
     await trashNote(noteId);
+    removeNote(noteId);
     if (currentNoteId === noteId) goto('/');
   }
 
@@ -131,7 +160,7 @@
   <div class="sidebar-header">
     {#if $sidebarOpen}
       <button class="new-note-btn" on:click={createNote}>
-        <span class="icon"><Plus size={14} /></span> Nota
+        <FilePlus size={14} /> {$_('sidebar.newNote')}
       </button>
     {/if}
     <button class="toggle-btn" on:click={() => sidebarOpen.update(v => !v)} title="Sidebar (Ctrl+\\)">
@@ -140,7 +169,7 @@
   </div>
 
   {#if $sidebarOpen}
-    <SearchBar on:search={onSearch} placeholder="Cerca..." />
+    <SearchBar on:search={onSearch} placeholder={$_('sidebar.search')} />
     <div class="sidebar-content">
       <!-- All notes row (also a drop target) -->
       <div
@@ -155,8 +184,8 @@
         tabindex="0"
         on:keydown={e => { if (e.key === 'Enter') { selectedFolderId = null; showTrash = false; } }}
       >
-        <span class="icon"><Folder size={14} /></span>
-        <span>Tutte le note</span>
+        <span class="all-notes-icon">📋</span>
+        <span>{$_('sidebar.allNotes')}</span>
         <span class="count">({$allCount ?? 0})</span>
       </div>
 
@@ -175,8 +204,13 @@
             active={selectedFolderId === folder.id && !showTrash}
             count={getFolderCount(folder.id, $allNotes)}
             on:click={() => { selectedFolderId = folder.id; showTrash = false; }}
+            on:rename={({ detail }) => renameFolder(folder, detail.name)}
           />
-          <button class="delete-folder-btn" on:click={() => deleteFolder(folder)}><X size={12} /></button>
+          <button
+            class="delete-folder-btn"
+            on:click={() => requestDeleteFolder(folder)}
+            title="Elimina cartella"
+          ><X size={12} /></button>
         </div>
       {/each}
 
@@ -184,7 +218,7 @@
         <div class="new-folder-input">
           <input
             bind:value={newFolderName}
-            placeholder="Nome cartella"
+            placeholder={$_('sidebar.folderNamePlaceholder')}
             on:keydown={e => {
               if (e.key === 'Enter') createFolder();
               if (e.key === 'Escape') showNewFolder = false;
@@ -193,7 +227,9 @@
           <button on:click={createFolder}>OK</button>
         </div>
       {:else}
-        <button class="add-folder-btn" on:click={() => showNewFolder = true}>+ Cartella</button>
+        <button class="add-folder-btn" on:click={() => showNewFolder = true}>
+          <FolderPlus size={13} /> {$_('sidebar.newFolder')}
+        </button>
       {/if}
 
       <div class="section-divider"></div>
@@ -216,8 +252,8 @@
       {:else}
         {#each displayedNotes as note (note.id)}
           <div
-            in:fly={{ y: 15, duration: 250, easing: quintOut }}
-            out:fade={{ duration: 150 }}
+            in:fly={{ y: 12, duration: 220, easing: quintOut }}
+            out:fade={{ duration: 120 }}
             animate:flip={{ duration: 300 }}
           >
             <NoteCard
@@ -260,6 +296,18 @@
   {/if}
 </aside>
 
+{#if confirmAction}
+  <ConfirmDialog
+    title="Elimina cartella"
+    message={`Eliminare "${confirmAction.folder.name}"? Le note rimarranno senza cartella.`}
+    confirmLabel="Elimina"
+    cancelLabel="Annulla"
+    destructive={true}
+    on:confirm={executeConfirm}
+    on:cancel={() => confirmAction = null}
+  />
+{/if}
+
 <style>
   .sidebar {
     width: 260px;
@@ -268,7 +316,8 @@
     border-right: 1px solid var(--color-border);
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease, min-width 0.3s ease;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.3s ease, border-color 0.25s ease;
     overflow: hidden;
     background: var(--color-bg);
     flex-shrink: 0;
@@ -280,51 +329,67 @@
     gap: 0.25rem;
   }
   .new-note-btn {
-    display: inline-flex; align-items: center; gap: 0.3rem;
-    font-size: 0.8rem; padding: 0.3rem 0.6rem; cursor: pointer;
-    background: var(--color-accent); color: var(--color-bg); border: none; border-radius: 4px;
-    font-family: inherit; flex: 1;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-size: 0.8rem; padding: 0.32rem 0.7rem; cursor: pointer;
+    background: var(--color-accent); color: var(--color-bg); border: none; border-radius: 5px;
+    font-family: 'DM Sans', system-ui, sans-serif; letter-spacing: 0.02em;
+    font-weight: 500;
+    flex: 1; transition: opacity 0.15s ease, transform 0.1s ease;
   }
+  .new-note-btn:hover { opacity: 0.85; transform: translateY(-0.5px); }
+  .new-note-btn:active { transform: translateY(0); opacity: 1; }
   .toggle-btn {
     display: inline-flex; align-items: center; justify-content: center;
     background: none; border: none; cursor: pointer; color: var(--color-text-muted);
     padding: 0.25rem; flex-shrink: 0;
+    transition: color 0.15s ease;
   }
   .toggle-btn:hover { color: var(--color-text); }
   .sidebar-content { overflow-y: auto; flex: 1; }
   .section-divider { height: 1px; background: var(--color-border); margin: 0.25rem 0; }
   .all-notes-row {
     display: flex; align-items: center; gap: 0.4rem;
-    padding: 0.5rem 1rem; cursor: pointer; font-size: 0.875rem;
+    padding: 0.5rem 1rem; cursor: pointer; font-size: 0.85rem;
+    color: var(--color-text);
+    transition: background-color 0.12s ease;
   }
   .all-notes-row .count { margin-left: auto; }
   .all-notes-row:hover, .all-notes-row.active { background: var(--color-hover); }
   .all-notes-row.drag-over { background: var(--color-surface); outline: 2px dashed var(--color-border); }
-  .count { font-size: 0.75rem; color: var(--color-text-muted); }
+  .all-notes-icon { font-size: 0.85rem; line-height: 1; }
+  .count {
+    font-size: 0.7rem; color: var(--color-text-muted);
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
   .folder-row { display: flex; align-items: center; }
   .folder-row :global(.folder-item) { flex: 1; }
   .folder-row.drag-over :global(.folder-item) { background: var(--color-surface); outline: 2px dashed var(--color-border); }
   .delete-folder-btn {
     display: inline-flex; align-items: center; justify-content: center;
     background: none; border: none; cursor: pointer; color: var(--color-text-faint);
-    padding: 0 0.5rem;
+    padding: 0 0.5rem; transition: color 0.15s ease;
+    flex-shrink: 0;
   }
-  .delete-folder-btn:hover { color: var(--color-text); }
+  .delete-folder-btn:hover { color: var(--color-accent-warm); }
   .new-folder-input { display: flex; gap: 0.25rem; padding: 0.25rem 0.75rem; }
   .new-folder-input input {
     flex: 1; font-size: 0.8rem; padding: 0.25rem; border: 1px solid var(--color-border); border-radius: 3px;
     background: var(--color-bg); color: var(--color-text); font-family: inherit;
+    transition: border-color 0.15s ease;
   }
+  .new-folder-input input:focus { outline: none; border-color: var(--color-text-muted); }
   .new-folder-input button {
     font-size: 0.8rem; padding: 0.25rem 0.5rem; cursor: pointer; font-family: inherit;
+    background: var(--color-accent); color: var(--color-bg); border: none; border-radius: 3px;
   }
   .add-folder-btn {
-    background: none; border: none; cursor: pointer; color: var(--color-text-muted);
-    padding: 0.4rem 1rem; font-size: 0.8rem; text-align: left; width: 100%;
-    font-family: inherit;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: none; border: none; cursor: pointer; color: var(--color-text-faint);
+    padding: 0.4rem 1rem; font-size: 0.78rem; text-align: left; width: 100%;
+    font-family: 'DM Sans', system-ui, sans-serif; letter-spacing: 0.02em;
+    transition: color 0.15s ease, background-color 0.15s ease;
   }
-  .add-folder-btn:hover { color: var(--color-text); }
-  .icon { display: inline-flex; align-items: center; }
+  .add-folder-btn:hover { color: var(--color-text-muted); background: var(--color-hover); }
   .tag-section {
     display: flex; flex-wrap: wrap; gap: 0.3rem; padding: 0.5rem 0.75rem;
   }
@@ -337,6 +402,25 @@
     display: inline-flex; align-items: center; justify-content: center;
     background: none; border: none; cursor: pointer; color: var(--color-text-faint);
     padding: 0.3rem; border-radius: 4px;
+    transition: color 0.15s ease, background-color 0.15s ease;
   }
-  .footer-btn:hover, .footer-btn.active { color: var(--color-text); background: var(--color-hover); }
+  .footer-btn:hover { color: var(--color-text-muted); background: var(--color-hover); }
+  .footer-btn.active { color: var(--color-text); background: var(--color-hover); }
+
+  /* Mobile: sidebar overlays content */
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 50;
+      box-shadow: var(--shadow-lg);
+      height: 100dvh;
+    }
+    .sidebar.closed {
+      transform: translateX(-100%);
+      width: 260px;
+      min-width: 260px;
+      box-shadow: none;
+    }
+  }
 </style>

@@ -10,6 +10,7 @@
   import { editorMode, setEditorMode } from '$lib/stores/editor.js';
   import { isWriting } from '$lib/stores/ui.js';
   import { noteToMarkdown, noteToText, downloadFile } from '$lib/export.js';
+  import { indexNote } from '$lib/search.js';
   import EditorToolbar from './EditorToolbar.svelte';
   import AIPanel from './AIPanel.svelte';
 
@@ -24,6 +25,7 @@
   let saveTimer;
   let showAIPanel = false;
   let editorVersion = 0;
+  let mdView = 'editor'; // 'editor' | 'preview' — mobile toggle
 
   // Tag state
   let tags = [...(note.tags ?? [])];
@@ -52,7 +54,7 @@
     tiptap = new Editor({
       element: editorEl,
       extensions: [StarterKit, Markdown],
-      content: $editorMode === 'rich' ? (note.content || '') : '',
+      content: note.content || '',
       onUpdate: () => {
         scheduleSave(() => tiptap.getHTML());
         triggerWriting();
@@ -80,6 +82,7 @@
       await db.notes.update(note.id, {
         title, content, editorMode: $editorMode, updatedAt: Date.now()
       });
+      indexNote({ id: note.id, title, content, tags });
     }, DEBOUNCE_MS);
   }
 
@@ -98,17 +101,19 @@
   async function toggleMode() {
     const newMode = $editorMode === 'rich' ? 'markdown' : 'rich';
     clearTimeout(saveTimer);
-    const currentContent = $editorMode === 'rich' ? (tiptap?.getHTML() ?? '') : markdownContent;
-    await db.notes.update(note.id, {
-      title, content: currentContent, editorMode: $editorMode, updatedAt: Date.now()
-    });
+
     if (newMode === 'markdown') {
       markdownContent = tiptap?.storage.markdown.getMarkdown() ?? '';
     } else {
       tiptap?.commands.setContent(markdownContent || '');
     }
+
     setEditorMode(newMode);
-    await db.notes.update(note.id, { editorMode: newMode, updatedAt: Date.now() });
+    const contentToSave = newMode === 'rich' ? (tiptap?.getHTML() ?? '') : markdownContent;
+    await db.notes.update(note.id, {
+      title, content: contentToSave, editorMode: newMode, updatedAt: Date.now()
+    });
+    indexNote({ id: note.id, title, content: contentToSave, tags });
   }
 
   // Tag management
@@ -117,6 +122,8 @@
     if (!clean || tags.includes(clean)) { tagInput = ''; return; }
     tags = [...tags, clean];
     await db.notes.update(note.id, { tags, updatedAt: Date.now() });
+    const content = $editorMode === 'rich' ? (tiptap?.getHTML() ?? '') : markdownContent;
+    indexNote({ id: note.id, title, content, tags });
     tagInput = '';
     showTagInput = false;
   }
@@ -124,6 +131,8 @@
   async function removeTag(tag) {
     tags = tags.filter(t => t !== tag);
     await db.notes.update(note.id, { tags, updatedAt: Date.now() });
+    const content = $editorMode === 'rich' ? (tiptap?.getHTML() ?? '') : markdownContent;
+    indexNote({ id: note.id, title, content, tags });
   }
 
   function openTagInput() {
@@ -173,7 +182,7 @@
     {/if}
   </div>
 
-  <div class="editor-body">
+  <div class="editor-body" class:md-mode={$editorMode === 'markdown'}>
     <!-- Tag row -->
     <div class="tag-row">
       {#each tags as tag}
@@ -223,18 +232,25 @@
       on:input={onTitleInput}
     />
 
-    {#if $editorMode === 'rich'}
-      <div class="tiptap-editor" bind:this={editorEl}></div>
-    {:else}
+    <!-- TipTap always mounted, hidden when in markdown mode -->
+    <div class="tiptap-editor" bind:this={editorEl} class:hidden={$editorMode !== 'rich'}></div>
+
+    {#if $editorMode === 'markdown'}
+      <!-- Mobile: toggle between editor and preview -->
+      <div class="md-view-toggle">
+        <button class:active={mdView === 'editor'} on:click={() => mdView = 'editor'}>Scrivi</button>
+        <button class:active={mdView === 'preview'} on:click={() => mdView = 'preview'}>Anteprima</button>
+      </div>
       <div class="markdown-split">
         <textarea
           bind:this={mdTextareaEl}
           class="md-source"
+          class:mobile-hidden={mdView === 'preview'}
           value={markdownContent}
           placeholder="Scrivi in Markdown..."
           on:input={onMarkdownInput}
         ></textarea>
-        <div class="md-preview">
+        <div class="md-preview" class:mobile-hidden={mdView === 'editor'}>
           {@html renderedHtml}
         </div>
       </div>
@@ -249,6 +265,11 @@
     flex: 1; overflow-y: auto; padding: 1.5rem 2rem 2rem;
     max-width: 720px; margin: 0 auto; width: 100%;
   }
+  .editor-body.md-mode {
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+  }
 
   /* Tag row */
   .tag-row {
@@ -259,21 +280,24 @@
     display: inline-flex; align-items: center; gap: 0.25rem;
     background: var(--color-surface); border: 1px solid var(--color-border);
     border-radius: 12px; padding: 0.15rem 0.6rem;
-    font-size: 0.75rem; color: var(--color-text-muted);
+    font-size: 0.7rem; color: var(--color-text-muted);
+    font-family: 'DM Sans', system-ui, sans-serif; letter-spacing: 0.02em;
+    transition: background-color 0.15s ease;
   }
   .tag-remove {
     background: none; border: none; cursor: pointer;
     color: var(--color-text-faint); padding: 0; font-size: 0.85rem;
     line-height: 1; display: inline-flex; align-items: center;
+    transition: color 0.15s ease;
   }
-  .tag-remove:hover { color: var(--color-text); }
+  .tag-remove:hover { color: var(--color-accent-warm); }
   .tag-add-btn {
     background: none; border: 1px dashed var(--color-border); border-radius: 12px;
-    padding: 0.15rem 0.6rem; font-size: 0.75rem; cursor: pointer;
-    color: var(--color-text-faint); font-family: inherit;
-    transition: color 0.15s, border-color 0.15s;
+    padding: 0.15rem 0.6rem; font-size: 0.7rem; cursor: pointer;
+    color: var(--color-text-faint); font-family: 'DM Sans', system-ui, sans-serif;
+    transition: color 0.15s ease, border-color 0.15s ease;
   }
-  .tag-add-btn:hover { color: var(--color-text-muted); border-color: var(--color-text-faint); }
+  .tag-add-btn:hover { color: var(--color-text-muted); border-color: var(--color-text-muted); }
   .tag-input-wrapper { position: relative; }
   .tag-input {
     border: 1px solid var(--color-border); border-radius: 12px;
@@ -296,24 +320,53 @@
   .title-input {
     width: 100%; border: none; outline: none;
     font-size: 1.75rem; font-weight: 700;
-    font-family: inherit; margin-bottom: 1.5rem;
+    font-family: inherit; margin-bottom: 1.25rem;
     background: transparent; color: var(--color-text);
+    letter-spacing: -0.02em; line-height: 1.2;
+    transition: color 0.25s ease;
   }
+  .title-input::placeholder { color: var(--color-text-faint); }
   :global(.tiptap-editor .ProseMirror) {
-    outline: none; min-height: 400px; line-height: 1.8; font-size: 1rem;
-    color: var(--color-text);
+    outline: none; min-height: 400px; line-height: 1.85; font-size: 1rem;
+    color: var(--color-text); caret-color: var(--color-accent-warm);
   }
   :global(.tiptap-editor .ProseMirror p) { color: var(--color-text); }
+  :global(.tiptap-editor .ProseMirror p.is-editor-empty:first-child::before) {
+    content: attr(data-placeholder); color: var(--color-text-faint); pointer-events: none; float: left; height: 0;
+  }
 
-  .markdown-split { display: flex; gap: 1rem; height: calc(100vh - 240px); }
+  /* MD view toggle — hidden on desktop, visible on mobile */
+  .md-view-toggle {
+    display: none;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+    flex-shrink: 0;
+  }
+  .md-view-toggle button {
+    flex: 1; padding: 0.4rem; font-size: 0.78rem; cursor: pointer;
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: 6px; color: var(--color-text-muted);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    transition: background-color 0.12s ease, color 0.12s ease;
+  }
+  .md-view-toggle button.active {
+    background: var(--color-hover); color: var(--color-text);
+    border-color: var(--color-text-faint);
+  }
+
+  .tiptap-editor.hidden { display: none; }
+
+  .markdown-split { display: flex; gap: 1rem; flex: 1; min-height: 300px; }
   .md-source {
     flex: 1; border: 1px solid var(--color-border); padding: 1rem;
     font-family: monospace; font-size: 0.9rem;
-    resize: none; outline: none; border-radius: 4px;
-    line-height: 1.6;
+    resize: none; outline: none; border-radius: 6px;
+    line-height: 1.7;
     background: var(--color-surface);
     color: var(--color-text);
+    transition: border-color 0.15s ease;
   }
+  .md-source:focus { border-color: var(--color-text-faint); }
   .md-source::placeholder { color: var(--color-text-faint); }
   .md-preview {
     flex: 1; padding: 1rem; overflow-y: auto;
@@ -346,4 +399,13 @@
   }
   :global(.md-preview a) { color: var(--color-accent); text-decoration: underline; }
   :global(.md-preview span[style]) { display: inline; }
+
+  @media (max-width: 640px) {
+    .editor-body { padding: 1rem 1rem 1.5rem; }
+    .md-view-toggle { display: flex; }
+    .markdown-split { flex-direction: column; min-height: calc(100vh - 280px); }
+    .md-source.mobile-hidden, .md-preview.mobile-hidden { display: none; }
+    .md-source { height: calc(100vh - 280px); }
+    .md-preview { border-left: none; border-top: 1px solid var(--color-border); height: calc(100vh - 280px); }
+  }
 </style>

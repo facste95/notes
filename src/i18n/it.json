@@ -2,10 +2,10 @@
   "app": { "name": "Folia" },
   "sidebar": {
     "allNotes": "Tutte le note",
-    "newNote": "+ Nota",
-    "newFolder": "+ Cartella",
+    "newNote": "Nuova nota",
+    "newFolder": "Nuova cartella",
     "folderNamePlaceholder": "Nome cartella",
-    "search": "Cerca..."
+    "search": "Cerca... (Ctrl+K)"
   },
   "editor": {
     "titlePlaceholder": "Titolo",

@@ -18,10 +18,12 @@ export function buildIndex(notes) {
 }
 
 export function indexNote(note) {
-  index?.add({
+  if (!index) return;
+  index.remove(note.id);
+  index.add({
     id: note.id,
-    title: note.title,
-    content: note.content.replace(/<[^>]+>/g, ''),
+    title: note.title ?? '',
+    content: (note.content ?? '').replace(/<[^>]+>/g, ''),
     tags: (note.tags ?? []).join(' ')
   });
 }

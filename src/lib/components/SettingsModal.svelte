@@ -169,18 +169,19 @@
 <style>
   .backdrop {
     position: fixed; inset: 0; z-index: 100;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.5);
     display: flex; align-items: center; justify-content: center;
     padding: 1rem;
+    backdrop-filter: blur(2px);
   }
   .panel {
     background: var(--color-bg);
     border: 1px solid var(--color-border);
-    border-radius: 8px;
-    width: 100%; max-width: 520px;
+    border-radius: 12px;
+    width: 100%; max-width: 480px;
     max-height: 90vh;
     display: flex; flex-direction: column;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    box-shadow: var(--shadow-lg);
   }
   .panel-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -189,12 +190,14 @@
     flex-shrink: 0;
   }
   h1 {
-    font-size: 1.1rem; font-weight: 600; color: var(--color-text);
+    font-size: 1rem; font-weight: 600; color: var(--color-text);
+    letter-spacing: -0.01em;
   }
   .close-btn {
     display: inline-flex; align-items: center; justify-content: center;
     background: none; border: none; cursor: pointer;
     color: var(--color-text-muted); padding: 0.25rem; border-radius: 4px;
+    transition: color 0.15s ease, background-color 0.15s ease;
   }
   .close-btn:hover { color: var(--color-text); background: var(--color-hover); }
   .panel-body {
@@ -202,8 +205,9 @@
   }
   section { margin-bottom: 1.75rem; }
   h2 {
-    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--color-text-muted); margin-bottom: 0.6rem;
+    font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--color-text-faint); margin-bottom: 0.6rem;
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
   .option-group {
     display: flex; flex-wrap: wrap; gap: 0.5rem;
@@ -211,12 +215,13 @@
   button {
     padding: 0.35rem 0.9rem;
     border: 1px solid var(--color-border);
-    border-radius: 4px; cursor: pointer;
+    border-radius: 5px; cursor: pointer;
     background: var(--color-surface);
-    font-family: inherit; font-size: 0.875rem;
-    color: var(--color-text); transition: background 0.15s;
+    font-family: inherit; font-size: 0.85rem;
+    color: var(--color-text);
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   }
-  button:hover { background: var(--color-hover); }
+  button:hover { background: var(--color-hover); border-color: var(--color-text-faint); }
   button.active {
     background: var(--color-accent);
     color: var(--color-bg);
@@ -224,9 +229,10 @@
   }
   .import-label {
     display: inline-block; padding: 0.35rem 0.9rem;
-    border: 1px solid var(--color-border); border-radius: 4px;
+    border: 1px solid var(--color-border); border-radius: 5px;
     cursor: pointer; background: var(--color-surface);
-    font-size: 0.875rem; color: var(--color-text);
+    font-size: 0.85rem; color: var(--color-text);
+    transition: background-color 0.15s ease;
   }
   .import-label:hover { background: var(--color-hover); }
   .api-key-row {
@@ -237,19 +243,21 @@
   }
   .api-input {
     width: 100%; padding: 0.5rem;
-    border: 1px solid var(--color-border); border-radius: 4px;
+    border: 1px solid var(--color-border); border-radius: 5px;
     font-family: monospace; font-size: 0.875rem;
     background: var(--color-surface); color: var(--color-text);
     margin-bottom: 0.5rem; outline: none;
+    transition: border-color 0.15s ease;
   }
+  .api-input:focus { border-color: var(--color-text-faint); }
   .remember-label {
     display: flex; align-items: center; gap: 0.4rem;
     font-size: 0.875rem; margin-bottom: 0.75rem; cursor: pointer;
   }
   .api-disclaimer {
-    font-size: 0.75rem; color: var(--color-text-muted);
+    font-size: 0.72rem; color: var(--color-text-muted);
     margin-top: 0.75rem; line-height: 1.5;
   }
-  .danger-btn { color: var(--color-text-muted); border-color: var(--color-border); }
+  .danger-btn { color: var(--color-text-muted); }
   .danger-btn:hover { color: var(--color-text); border-color: var(--color-text-muted); }
 </style>

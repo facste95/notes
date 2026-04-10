@@ -124,65 +124,71 @@
 <style>
   .palette-backdrop {
     position: fixed; inset: 0; z-index: 200;
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.5);
     display: flex; align-items: flex-start; justify-content: center;
     padding-top: 12vh;
+    backdrop-filter: blur(2px);
   }
   .palette-panel {
     background: var(--color-bg);
     border: 1px solid var(--color-border);
-    border-radius: 10px;
-    width: 100%; max-width: 580px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+    border-radius: 12px;
+    width: 100%; max-width: 560px;
+    box-shadow: var(--shadow-lg);
     overflow: hidden;
   }
   .palette-search {
     display: flex; align-items: center; gap: 0.6rem;
-    padding: 0.85rem 1rem;
+    padding: 0.9rem 1rem;
     border-bottom: 1px solid var(--color-border);
   }
   .palette-search :global(.search-icon) { color: var(--color-text-muted); flex-shrink: 0; }
   .palette-input {
     flex: 1; border: none; outline: none; background: transparent;
     font-family: inherit; font-size: 1rem; color: var(--color-text);
+    caret-color: var(--color-accent-warm);
   }
   .palette-input::placeholder { color: var(--color-text-faint); }
   .palette-close {
     background: none; border: none; cursor: pointer;
     color: var(--color-text-muted); display: inline-flex;
     padding: 0.2rem; border-radius: 4px;
+    transition: color 0.15s ease, background-color 0.15s ease;
   }
   .palette-close:hover { color: var(--color-text); background: var(--color-hover); }
-  .palette-results { max-height: 400px; overflow-y: auto; padding: 0.4rem 0; }
+  .palette-results { max-height: 400px; overflow-y: auto; padding: 0.35rem 0; }
   .palette-section-label {
-    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--color-text-faint); padding: 0.3rem 1rem 0.2rem;
+    font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--color-text-faint); padding: 0.35rem 1rem 0.2rem;
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
   .palette-empty {
     padding: 1.5rem 1rem; text-align: center;
-    color: var(--color-text-muted); font-size: 0.9rem;
+    color: var(--color-text-muted); font-size: 0.875rem;
   }
   .palette-item {
     padding: 0.6rem 1rem; cursor: pointer;
-    border-radius: 0; transition: background 0.1s;
+    transition: background-color 0.1s ease;
   }
   .palette-item.selected, .palette-item:hover { background: var(--color-hover); }
   .palette-item-title {
-    font-size: 0.9rem; font-weight: 500; color: var(--color-text);
-    margin-bottom: 0.2rem;
+    font-size: 0.875rem; font-weight: 600; color: var(--color-text);
+    margin-bottom: 0.2rem; letter-spacing: -0.01em;
   }
   .palette-item-meta {
     display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
   }
   .palette-item-excerpt {
-    font-size: 0.78rem; color: var(--color-text-muted);
+    font-size: 0.76rem; color: var(--color-text-muted);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    flex: 1; min-width: 0;
+    flex: 1; min-width: 0; font-style: italic;
   }
   .palette-item-tags {
-    font-size: 0.72rem; color: var(--color-text-faint); flex-shrink: 0;
+    font-size: 0.68rem; color: var(--color-accent-warm); flex-shrink: 0;
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
   .palette-item-date {
-    font-size: 0.72rem; color: var(--color-text-faint); flex-shrink: 0;
+    font-size: 0.68rem; color: var(--color-text-faint); flex-shrink: 0;
+    font-family: 'DM Sans', system-ui, sans-serif;
   }
 </style>

@@ -50,26 +50,35 @@
     border-bottom: 1px solid var(--color-border);
     border-left: 2px solid transparent;
     gap: 0.5rem;
+    transition: background-color 0.15s ease, border-left-color 0.2s ease;
   }
   .note-card:hover { background: var(--color-hover); }
   .note-card.active {
     background: var(--color-surface);
-    border-left-color: var(--color-accent);
+    border-left-color: var(--color-accent-warm);
     padding-left: calc(1rem - 2px);
   }
   .note-card:hover .trash-btn { opacity: 1; }
   .note-main { flex: 1; min-width: 0; }
-  .note-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; }
-  .note-meta { font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 0.25rem; }
+  .note-title {
+    font-weight: 600; font-size: 0.875rem; margin-bottom: 0.2rem;
+    letter-spacing: -0.01em;
+  }
+  .note-meta {
+    font-size: 0.7rem; color: var(--color-text-muted); margin-bottom: 0.25rem;
+    font-family: 'DM Sans', system-ui, sans-serif; letter-spacing: 0.01em;
+  }
   .note-excerpt {
-    font-size: 0.8rem; color: var(--color-text-muted);
+    font-size: 0.78rem; color: var(--color-text-muted);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-style: italic;
   }
   .trash-btn {
     display: inline-flex; align-items: center; justify-content: center;
     background: none; border: none; cursor: pointer; color: var(--color-text-faint);
-    padding: 0.2rem; flex-shrink: 0; opacity: 0; transition: opacity 0.15s;
+    padding: 0.2rem; flex-shrink: 0; opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease;
     margin-top: 0.1rem;
   }
-  .trash-btn:hover { color: var(--color-text); }
+  .trash-btn:hover { color: var(--color-accent-warm); }
 </style>

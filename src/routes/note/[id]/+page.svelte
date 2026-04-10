@@ -35,7 +35,7 @@
 
 {#if note}
   {#key note.id}
-    <div in:fly={{ x: 30, duration: 350, easing: quintOut }}>
+    <div in:fly={{ x: 20, duration: 300, easing: quintOut }}>
       <Editor {note} />
     </div>
   {/key}

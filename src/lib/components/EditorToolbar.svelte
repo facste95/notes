@@ -1,7 +1,6 @@
 <script>
-  import { onMount, createEventDispatcher } from 'svelte';
-  import { Sparkles, Paintbrush, Code2, Download } from 'lucide-svelte';
-  import { db } from '$lib/db.js';
+  import { createEventDispatcher } from 'svelte';
+  import { Sparkles, Paintbrush, Code2, Download, List, Code } from 'lucide-svelte';
   import { AI_ENABLED } from '$lib/stores/ui.js';
 
   export let editor = null;
@@ -12,18 +11,7 @@
 
   const dispatch = createEventDispatcher();
   let showDownload = false;
-
-  const FIXED_COLORS = [
-    '#e74c3c', '#e67e22', '#f39c12', '#2ecc71',
-    '#1abc9c', '#3498db', '#9b59b6', '#e91e63'
-  ];
-  let customColors = [];
-  let colorPickerEl;
-
-  onMount(async () => {
-    const pref = await db.prefs.get('customColors');
-    customColors = pref?.value ?? [];
-  });
+  let showHeadingMenu = false;
 
   function cmd(command, attrs = {}) {
     if (!editor) return;
@@ -31,6 +19,17 @@
   }
 
   function closeDownload() { showDownload = false; }
+  function closeHeadingMenu() { showHeadingMenu = false; }
+
+  function setRichHeading(level) {
+    cmd('toggleHeading', { level });
+    closeHeadingMenu();
+  }
+
+  function setMdHeading(level) {
+    insertMdSyntax(`h${level}`);
+    closeHeadingMenu();
+  }
 
   function insertMdSyntax(type) {
     if (!mdTextarea) return;
@@ -47,17 +46,17 @@
     if (type === 'bold') {
       const inner = selected || 'testo';
       newValue = val.slice(0, start) + `**${inner}**` + val.slice(end);
-      newStart = selected ? start + 2 : start + 2;
+      newStart = start + 2;
       newEnd = selected ? end + 2 : start + 2 + inner.length;
     } else if (type === 'italic') {
       const inner = selected || 'testo';
       newValue = val.slice(0, start) + `*${inner}*` + val.slice(end);
-      newStart = selected ? start + 1 : start + 1;
+      newStart = start + 1;
       newEnd = selected ? end + 1 : start + 1 + inner.length;
     } else if (type === 'code') {
       const inner = selected || 'codice';
       newValue = val.slice(0, start) + '`' + inner + '`' + val.slice(end);
-      newStart = selected ? start + 1 : start + 1;
+      newStart = start + 1;
       newEnd = selected ? end + 1 : start + 1 + inner.length;
     } else if (type === 'h1' || type === 'h2' || type === 'h3') {
       const prefix = { h1: '# ', h2: '## ', h3: '### ' }[type];
@@ -83,90 +82,81 @@
     }, 0);
   }
 
-  function applyColor(hex) {
-    if (!mdTextarea) return;
-    const start = mdTextarea.selectionStart;
-    const end = mdTextarea.selectionEnd;
-    const selected = mdTextarea.value.slice(start, end) || 'testo';
-    const wrapped = `<span style="color:${hex}">${selected}</span>`;
-    const newValue = mdTextarea.value.slice(0, start) + wrapped + mdTextarea.value.slice(end);
-    mdTextarea.value = newValue;
-    mdTextarea.dispatchEvent(new Event('input', { bubbles: true }));
-    const newPos = start + wrapped.length;
-    setTimeout(() => {
-      mdTextarea.setSelectionRange(newPos, newPos);
-      mdTextarea.focus();
-    }, 0);
-  }
-
-  async function onColorPicker(e) {
-    const hex = e.target.value;
-    applyColor(hex);
-    customColors = [hex, ...customColors.filter(c => c !== hex)].slice(0, 4);
-    await db.prefs.put({ key: 'customColors', value: customColors });
-  }
-
   $: boldActive   = (editorVersion, editor?.isActive('bold') ?? false);
   $: italicActive = (editorVersion, editor?.isActive('italic') ?? false);
   $: h1Active     = (editorVersion, editor?.isActive('heading', { level: 1 }) ?? false);
   $: h2Active     = (editorVersion, editor?.isActive('heading', { level: 2 }) ?? false);
   $: h3Active     = (editorVersion, editor?.isActive('heading', { level: 3 }) ?? false);
   $: bulletActive = (editorVersion, editor?.isActive('bulletList') ?? false);
+  $: activeHeading = h1Active ? 1 : h2Active ? 2 : h3Active ? 3 : null;
 </script>
 
-<svelte:window on:click={e => { if (!e.target.closest('.download-wrapper')) closeDownload(); }} />
+<svelte:window on:click={e => {
+  if (!e.target.closest('.download-wrapper')) closeDownload();
+  if (!e.target.closest('.heading-wrapper')) closeHeadingMenu();
+}} />
 
 <div class="toolbar">
-  {#if mode === 'rich'}
-    <button on:click={() => cmd('toggleBold')} class:active={boldActive} title="Grassetto (Ctrl+B)"><b>B</b></button>
-    <button on:click={() => cmd('toggleItalic')} class:active={italicActive} title="Corsivo (Ctrl+I)"><i>I</i></button>
-    <button on:click={() => cmd('toggleHeading', { level: 1 })} class:active={h1Active}>H1</button>
-    <button on:click={() => cmd('toggleHeading', { level: 2 })} class:active={h2Active}>H2</button>
-    <button on:click={() => cmd('toggleHeading', { level: 3 })} class:active={h3Active}>H3</button>
-    <button on:click={() => cmd('toggleBulletList')} class:active={bulletActive}>• Lista</button>
-    <div class="separator"></div>
-  {:else if mode === 'markdown'}
-    <button on:click={() => insertMdSyntax('bold')} title="Grassetto"><b>B</b></button>
-    <button on:click={() => insertMdSyntax('italic')} title="Corsivo"><i>I</i></button>
-    <button on:click={() => insertMdSyntax('h1')}>H1</button>
-    <button on:click={() => insertMdSyntax('h2')}>H2</button>
-    <button on:click={() => insertMdSyntax('h3')}>H3</button>
-    <button on:click={() => insertMdSyntax('list')}>• Lista</button>
-    <button on:click={() => insertMdSyntax('code')} title="Codice">`c`</button>
-    <div class="separator"></div>
-    <div class="color-section">
-      {#each FIXED_COLORS as color}
-        <button
-          class="color-dot"
-          style="background:{color}"
-          on:click={() => applyColor(color)}
-          title={color}
-        ></button>
-      {/each}
-      {#each customColors as color}
-        <button
-          class="color-dot color-dot--custom"
-          style="background:{color}"
-          on:click={() => applyColor(color)}
-          title={color}
-        ></button>
-      {/each}
-      <button
-        class="color-picker-trigger"
-        title="Scegli colore"
-        on:click={() => colorPickerEl.click()}
-      >
-        <input
-          bind:this={colorPickerEl}
-          type="color"
-          style="display:none"
-          on:change={onColorPicker}
-        />
-        <span>+</span>
-      </button>
+  <div class="toolbar-left">
+    <!-- Format group: Bold, Italic -->
+    <div class="tool-group">
+      {#if mode === 'rich'}
+        <button on:click={() => cmd('toggleBold')} class:active={boldActive} title="Grassetto (Ctrl+B)"><b>B</b></button>
+        <button on:click={() => cmd('toggleItalic')} class:active={italicActive} title="Corsivo (Ctrl+I)"><i>I</i></button>
+      {:else}
+        <button on:click={() => insertMdSyntax('bold')} title="Grassetto"><b>B</b></button>
+        <button on:click={() => insertMdSyntax('italic')} title="Corsivo"><i>I</i></button>
+      {/if}
     </div>
+
     <div class="separator"></div>
-  {/if}
+
+    <!-- Heading dropdown -->
+    <div class="tool-group">
+      <div class="heading-wrapper">
+        <button
+          class="heading-trigger"
+          class:active={activeHeading !== null}
+          on:click={() => showHeadingMenu = !showHeadingMenu}
+          title="Titolo"
+        >
+          {#if activeHeading}H{activeHeading}{:else}H{/if}
+          <span class="heading-caret">▾</span>
+        </button>
+        {#if showHeadingMenu}
+          <div class="heading-dropdown">
+            {#if mode === 'rich'}
+              <button class:active={h1Active} on:click={() => setRichHeading(1)}>H1 — Titolo principale</button>
+              <button class:active={h2Active} on:click={() => setRichHeading(2)}>H2 — Titolo sezione</button>
+              <button class:active={h3Active} on:click={() => setRichHeading(3)}>H3 — Sottotitolo</button>
+            {:else}
+              <button on:click={() => setMdHeading(1)}>H1 — Titolo principale</button>
+              <button on:click={() => setMdHeading(2)}>H2 — Titolo sezione</button>
+              <button on:click={() => setMdHeading(3)}>H3 — Sottotitolo</button>
+            {/if}
+          </div>
+        {/if}
+      </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <!-- List + Code group -->
+    <div class="tool-group">
+      {#if mode === 'rich'}
+        <button on:click={() => cmd('toggleBulletList')} class:active={bulletActive} title="Lista puntata">
+          <List size={14} />
+        </button>
+      {:else}
+        <button on:click={() => insertMdSyntax('list')} title="Lista puntata">
+          <List size={14} />
+        </button>
+        <button on:click={() => insertMdSyntax('code')} title="Codice inline">
+          <Code size={14} />
+        </button>
+      {/if}
+    </div>
+  </div>
 
   <!-- Right side controls -->
   <div class="toolbar-right">
@@ -216,50 +206,91 @@
 
 <style>
   .toolbar {
-    display: flex; align-items: center; gap: 0.25rem;
-    padding: 0.5rem 1rem; border-bottom: 1px solid var(--color-border);
-    background: var(--color-bg); flex-wrap: wrap;
+    display: flex; align-items: center;
+    padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg); gap: 0;
+    transition: background-color 0.3s ease, border-color 0.25s ease;
+    overflow: hidden;
+  }
+  .toolbar-left {
+    display: flex; align-items: center; gap: 0.15rem;
+    flex: 1; min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .toolbar-left::-webkit-scrollbar { display: none; }
+  .tool-group {
+    display: flex; align-items: center; gap: 0.1rem; flex-shrink: 0;
   }
   button {
-    background: none; border: 1px solid transparent; padding: 0.25rem 0.5rem;
-    cursor: pointer; font-size: 0.8rem; border-radius: 3px; font-family: inherit;
-    color: var(--color-text);
+    background: none; border: 1px solid transparent; padding: 0.25rem 0.45rem;
+    cursor: pointer; font-size: 0.8rem; border-radius: 4px; font-family: inherit;
+    color: var(--color-text-muted); flex-shrink: 0;
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+    display: inline-flex; align-items: center; justify-content: center;
   }
-  button:hover { background: var(--color-hover); border-color: var(--color-border); }
+  button:hover { background: var(--color-hover); border-color: var(--color-border); color: var(--color-text); }
   button.active {
     background: var(--color-hover);
     border-color: var(--color-border);
     color: var(--color-text);
   }
-  .separator { width: 1px; height: 1.2rem; background: var(--color-border); margin: 0 0.25rem; }
-  .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 0.4rem; }
+  .separator { width: 1px; height: 1.2rem; background: var(--color-border); margin: 0 0.3rem; flex-shrink: 0; }
+  .toolbar-right { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; margin-left: 0.5rem; }
+
+  /* Heading dropdown */
+  .heading-wrapper { position: relative; }
+  .heading-trigger {
+    display: inline-flex; align-items: center; gap: 0.2rem;
+    padding: 0.25rem 0.4rem; font-weight: 600; min-width: 38px;
+  }
+  .heading-caret { font-size: 0.6rem; line-height: 1; color: var(--color-text-faint); }
+  .heading-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 30;
+    background: var(--color-bg); border: 1px solid var(--color-border);
+    border-radius: 6px; box-shadow: var(--shadow-md);
+    overflow: hidden; min-width: 180px;
+  }
+  .heading-dropdown button {
+    display: block; width: 100%; text-align: left;
+    padding: 0.4rem 0.75rem; border: none; border-radius: 0;
+    font-size: 0.82rem; cursor: pointer;
+    background: var(--color-bg); color: var(--color-text);
+  }
+  .heading-dropdown button:hover { background: var(--color-hover); }
+  .heading-dropdown button.active { background: var(--color-hover); color: var(--color-text); }
+
+  /* Mode switch pill */
   .mode-switch {
     display: flex;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-radius: 14px;
+    border-radius: 16px;
     padding: 2px; gap: 2px;
   }
   .mode-btn {
     display: inline-flex; align-items: center; justify-content: center;
     padding: 0.2rem 0.45rem;
-    border: none; border-radius: 10px;
+    border: none; border-radius: 12px;
     background: transparent; cursor: pointer;
-    color: var(--color-text-muted);
-    transition: background 0.18s, color 0.18s;
+    color: var(--color-text-faint);
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   }
   .mode-btn.active {
     background: var(--color-bg);
     color: var(--color-text);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
   }
   .icon-btn { display: inline-flex; align-items: center; }
   .ai-btn.active { background: var(--color-hover); border-color: var(--color-border); }
+
+  /* Download dropdown */
   .download-wrapper { position: relative; }
   .download-dropdown {
     position: absolute; top: calc(100% + 6px); right: 0; z-index: 20;
     background: var(--color-bg); border: 1px solid var(--color-border);
-    border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-radius: 6px; box-shadow: var(--shadow-md);
     overflow: hidden; min-width: 100px;
   }
   .download-dropdown button {
@@ -270,23 +301,9 @@
     font-family: inherit;
   }
   .download-dropdown button:hover { background: var(--color-hover); }
-  .color-section {
-    display: flex; align-items: center; gap: 0.2rem; flex-wrap: nowrap;
+
+  @media (max-width: 640px) {
+    .toolbar { padding: 0.35rem 0.5rem; }
+    button { min-width: 32px; min-height: 32px; padding: 0.3rem 0.4rem; }
   }
-  .color-dot {
-    width: 15px; height: 15px; border-radius: 50%;
-    border: 1.5px solid rgba(0,0,0,0.15); cursor: pointer;
-    padding: 0; flex-shrink: 0; transition: transform 0.1s;
-  }
-  .color-dot:hover { transform: scale(1.2); }
-  .color-dot--custom { border-style: dashed; }
-  .color-picker-trigger {
-    width: 15px; height: 15px; border-radius: 50%;
-    border: 1.5px dashed var(--color-border);
-    cursor: pointer; background: none;
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 0.7rem; color: var(--color-text-muted); padding: 0;
-    position: relative; flex-shrink: 0;
-  }
-  .color-picker-trigger:hover { border-color: var(--color-text-faint); color: var(--color-text); }
 </style>

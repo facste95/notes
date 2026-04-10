@@ -115,38 +115,41 @@
   .onboarding-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    backdrop-filter: blur(2px);
   }
   .onboarding-card {
     background: var(--color-bg);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 2.5rem;
     width: 380px;
     max-width: 90vw;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-border);
   }
   .progress {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.4rem;
     margin-bottom: 2rem;
   }
   .progress-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    height: 3px;
+    flex: 1;
+    border-radius: 99px;
     background: var(--color-border);
-    transition: background 0.2s;
+    transition: background-color 0.3s ease;
   }
-  .progress-dot.active { background: var(--color-accent); }
+  .progress-dot.active { background: var(--color-accent-warm); }
   .progress-dot.done { background: var(--color-text-muted); }
   h2 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     margin-bottom: 1.5rem;
     color: var(--color-text);
+    letter-spacing: -0.02em;
   }
   .options {
     display: flex;
@@ -156,17 +159,18 @@
   .options button {
     flex: 1;
     padding: 0.75rem;
-    border: 2px solid var(--color-border);
+    border: 1.5px solid var(--color-border);
     border-radius: 8px;
     cursor: pointer;
     background: var(--color-surface);
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     color: var(--color-text);
-    transition: border-color 0.15s;
+    transition: border-color 0.18s ease, background-color 0.18s ease;
   }
+  .options button:hover { background: var(--color-hover); }
   .options button.selected {
-    border-color: var(--color-accent);
+    border-color: var(--color-accent-warm);
     background: var(--color-hover);
   }
   .hint {
@@ -186,30 +190,36 @@
     font-family: monospace;
     margin-bottom: 2rem;
     outline: none;
+    transition: border-color 0.15s ease;
   }
+  .api-input:focus { border-color: var(--color-text-faint); }
   .actions {
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;
   }
   .next-btn {
-    padding: 0.6rem 1.5rem;
+    padding: 0.55rem 1.4rem;
     background: var(--color-accent);
     color: var(--color-bg);
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
+    transition: opacity 0.15s ease;
   }
+  .next-btn:hover { opacity: 0.85; }
   .skip-btn {
-    padding: 0.6rem 1rem;
+    padding: 0.55rem 1rem;
     background: none;
     border: 1px solid var(--color-border);
     border-radius: 6px;
     cursor: pointer;
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     color: var(--color-text-muted);
+    transition: color 0.15s ease, border-color 0.15s ease;
   }
+  .skip-btn:hover { color: var(--color-text); border-color: var(--color-text-faint); }
 </style>
